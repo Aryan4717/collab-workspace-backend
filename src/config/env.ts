@@ -15,6 +15,9 @@ interface EnvConfig {
   dbUsername: string;
   dbPassword: string;
   dbName: string;
+  redisHost: string;
+  redisPort: number;
+  redisPassword?: string;
 }
 
 const getEnvConfig = (): EnvConfig => {
@@ -31,6 +34,9 @@ const getEnvConfig = (): EnvConfig => {
   const dbUsername = process.env.DB_USERNAME || 'postgres';
   const dbPassword = process.env.DB_PASSWORD || 'postgres';
   const dbName = process.env.DB_NAME || 'collab_workspace';
+  const redisHost = process.env.REDIS_HOST || 'localhost';
+  const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+  const redisPassword = process.env.REDIS_PASSWORD;
 
   if (nodeEnv === 'production') {
     if (jwtSecret === 'your-secret-key-change-in-production') {
@@ -54,6 +60,9 @@ const getEnvConfig = (): EnvConfig => {
     dbUsername,
     dbPassword,
     dbName,
+    redisHost,
+    redisPort,
+    redisPassword,
   };
 };
 

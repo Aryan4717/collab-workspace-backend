@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import { AppDataSource } from '../config/database';
-import { env } from '../config/env';
 
 async function resetDatabase() {
   try {
