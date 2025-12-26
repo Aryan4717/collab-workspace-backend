@@ -12,7 +12,7 @@ export const dataSourceOptions: DataSourceOptions = {
   database: env.dbName,
   entities: [User, RefreshToken],
   synchronize: env.nodeEnv !== 'production', // Auto-sync in dev, use migrations in production
-  logging: env.nodeEnv === 'development',
+  logging: false, // Disable SQL query logging
   migrations: ['dist/migrations/*.js'],
   migrationsTableName: 'migrations',
 };
