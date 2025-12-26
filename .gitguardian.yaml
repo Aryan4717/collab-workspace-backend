@@ -1,0 +1,12 @@
+# GitGuardian configuration
+# This file configures GitGuardian to ignore false positives
+
+# Ignore these files from secret scanning
+paths-ignore:
+  - ".env.example"
+  - "docker-compose.yml"
+
+# Note: If using GitGuardian in GitHub/GitLab, you may also need to:
+# 1. Go to GitGuardian dashboard
+# 2. Mark the specific incidents as "Resolved" or "False Positive"
+# 3. Or use the GitGuardian UI to add these files to the ignore list

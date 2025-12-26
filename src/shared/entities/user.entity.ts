@@ -1,12 +1,50 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 import bcrypt from 'bcrypt';
 
-export interface User {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
+@Entity('users')
+@Index(['email'], { unique: true })
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email!: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  password!: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  name!: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+
+  static async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
+  }
+
+  static async comparePassword(
+    password: string,
+    hashedPassword: string
+  ): Promise<boolean> {
+    return bcrypt.compare(password, hashedPassword);
+  }
+
+  toResponse() {
+    const { password, ...userResponse } = this;
+    return userResponse;
+  }
 }
 
 export interface CreateUserDto {
@@ -22,23 +60,3 @@ export interface UserResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export class UserEntity {
-  static async hashPassword(password: string): Promise<string> {
-    const saltRounds = 10;
-    return bcrypt.hash(password, saltRounds);
-  }
-
-  static async comparePassword(
-    password: string,
-    hashedPassword: string
-  ): Promise<boolean> {
-    return bcrypt.compare(password, hashedPassword);
-  }
-
-  static toResponse(user: User): UserResponse {
-    const { password, ...userResponse } = user;
-    return userResponse;
-  }
-}
-

@@ -15,13 +15,13 @@ export class JwtUtil {
   static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.jwtSecret, {
       expiresIn: env.jwtExpiresIn,
-    });
+    } as jwt.SignOptions);
   }
 
   static generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.jwtRefreshSecret, {
       expiresIn: env.jwtRefreshExpiresIn,
-    });
+    } as jwt.SignOptions);
   }
 
   static generateTokenPair(payload: TokenPayload): TokenPair {

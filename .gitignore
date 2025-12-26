@@ -3,8 +3,17 @@ dist/
 *.log
 .env
 .env.local
+.env.*.local
 .DS_Store
 *.swp
 *.swo
 *~
+
+# Secrets and sensitive files
+*.pem
+*.key
+*.cert
+secrets/
+.env.production
+.env.staging
 

@@ -10,6 +10,11 @@ interface EnvConfig {
   jwtRefreshSecret: string;
   jwtExpiresIn: string;
   jwtRefreshExpiresIn: string;
+  dbHost: string;
+  dbPort: number;
+  dbUsername: string;
+  dbPassword: string;
+  dbName: string;
 }
 
 const getEnvConfig = (): EnvConfig => {
@@ -21,6 +26,11 @@ const getEnvConfig = (): EnvConfig => {
     process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
   const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '15m';
   const jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+  const dbHost = process.env.DB_HOST || 'localhost';
+  const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
+  const dbUsername = process.env.DB_USERNAME || 'postgres';
+  const dbPassword = process.env.DB_PASSWORD || 'postgres';
+  const dbName = process.env.DB_NAME || 'collab_workspace';
 
   if (nodeEnv === 'production') {
     if (jwtSecret === 'your-secret-key-change-in-production') {
@@ -39,6 +49,11 @@ const getEnvConfig = (): EnvConfig => {
     jwtRefreshSecret,
     jwtExpiresIn,
     jwtRefreshExpiresIn,
+    dbHost,
+    dbPort,
+    dbUsername,
+    dbPassword,
+    dbName,
   };
 };
 

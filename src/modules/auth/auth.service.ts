@@ -1,49 +1,57 @@
-import { v4 as uuidv4 } from 'uuid';
-import { User, CreateUserDto, UserEntity, UserResponse } from '../../shared/entities/user.entity';
+import { Repository } from 'typeorm';
+import { AppDataSource } from '../../config/database';
+import { User, CreateUserDto, UserResponse } from '../../shared/entities/user.entity';
+import { RefreshToken } from '../../shared/entities/refresh-token.entity';
 import { JwtUtil, TokenPair } from '../../shared/utils/jwt.util';
 
-// In-memory store (replace with database in production)
-const users: User[] = [];
-const refreshTokens: Set<string> = new Set();
-
 export class AuthService {
+  private static userRepository: Repository<User> = AppDataSource.getRepository(User);
+  private static refreshTokenRepository: Repository<RefreshToken> =
+    AppDataSource.getRepository(RefreshToken);
+
   static async register(userData: CreateUserDto): Promise<{
     user: UserResponse;
     tokens: TokenPair;
   }> {
     // Check if user already exists
-    const existingUser = users.find((u) => u.email === userData.email);
+    const existingUser = await this.userRepository.findOne({
+      where: { email: userData.email },
+    });
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
     // Hash password
-    const hashedPassword = await UserEntity.hashPassword(userData.password);
+    const hashedPassword = await User.hashPassword(userData.password);
 
     // Create user
-    const now = new Date();
-    const user: User = {
-      id: uuidv4(),
+    const user = this.userRepository.create({
       email: userData.email,
       password: hashedPassword,
       name: userData.name,
-      createdAt: now,
-      updatedAt: now,
-    };
+    });
 
-    users.push(user);
+    const savedUser = await this.userRepository.save(user);
 
     // Generate tokens
     const tokens = JwtUtil.generateTokenPair({
-      userId: user.id,
-      email: user.email,
+      userId: savedUser.id,
+      email: savedUser.email,
     });
 
     // Store refresh token
-    refreshTokens.add(tokens.refreshToken);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+    const refreshTokenEntity = this.refreshTokenRepository.create({
+      token: tokens.refreshToken,
+      userId: savedUser.id,
+      expiresAt,
+    });
+    await this.refreshTokenRepository.save(refreshTokenEntity);
 
     return {
-      user: UserEntity.toResponse(user),
+      user: savedUser.toResponse(),
       tokens,
     };
   }
@@ -53,16 +61,15 @@ export class AuthService {
     tokens: TokenPair;
   }> {
     // Find user
-    const user = users.find((u) => u.email === email);
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
     if (!user) {
       throw new Error('Invalid email or password');
     }
 
     // Verify password
-    const isPasswordValid = await UserEntity.comparePassword(
-      password,
-      user.password
-    );
+    const isPasswordValid = await User.comparePassword(password, user.password);
     if (!isPasswordValid) {
       throw new Error('Invalid email or password');
     }
@@ -74,10 +81,18 @@ export class AuthService {
     });
 
     // Store refresh token
-    refreshTokens.add(tokens.refreshToken);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+    const refreshTokenEntity = this.refreshTokenRepository.create({
+      token: tokens.refreshToken,
+      userId: user.id,
+      expiresAt,
+    });
+    await this.refreshTokenRepository.save(refreshTokenEntity);
 
     return {
-      user: UserEntity.toResponse(user),
+      user: user.toResponse(),
       tokens,
     };
   }
@@ -86,9 +101,21 @@ export class AuthService {
     // Verify refresh token
     const payload = JwtUtil.verifyRefreshToken(refreshToken);
 
-    // Check if refresh token exists in store
-    if (!refreshTokens.has(refreshToken)) {
+    // Check if refresh token exists in database and is valid
+    const tokenEntity = await this.refreshTokenRepository.findOne({
+      where: { token: refreshToken },
+      relations: ['user'],
+    });
+
+    if (!tokenEntity) {
       throw new Error('Invalid refresh token');
+    }
+
+    // Check if token is expired
+    if (tokenEntity.expiresAt < new Date()) {
+      // Remove expired token
+      await this.refreshTokenRepository.remove(tokenEntity);
+      throw new Error('Refresh token has expired');
     }
 
     // Generate new token pair
@@ -97,20 +124,47 @@ export class AuthService {
       email: payload.email,
     });
 
-    // Remove old refresh token and add new one
-    refreshTokens.delete(refreshToken);
-    refreshTokens.add(tokens.refreshToken);
+    // Remove old refresh token
+    await this.refreshTokenRepository.remove(tokenEntity);
+
+    // Store new refresh token
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+    const newRefreshTokenEntity = this.refreshTokenRepository.create({
+      token: tokens.refreshToken,
+      userId: payload.userId,
+      expiresAt,
+    });
+    await this.refreshTokenRepository.save(newRefreshTokenEntity);
 
     return tokens;
   }
 
   static async logout(refreshToken: string): Promise<void> {
-    refreshTokens.delete(refreshToken);
+    const tokenEntity = await this.refreshTokenRepository.findOne({
+      where: { token: refreshToken },
+    });
+
+    if (tokenEntity) {
+      await this.refreshTokenRepository.remove(tokenEntity);
+    }
   }
 
   static async getUserById(userId: string): Promise<UserResponse | null> {
-    const user = users.find((u) => u.id === userId);
-    return user ? UserEntity.toResponse(user) : null;
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    return user ? user.toResponse() : null;
+  }
+
+  // Clean up expired refresh tokens (can be called periodically)
+  static async cleanupExpiredTokens(): Promise<void> {
+    const now = new Date();
+    await this.refreshTokenRepository
+      .createQueryBuilder()
+      .delete()
+      .where('expiresAt < :now', { now })
+      .execute();
   }
 }
-
