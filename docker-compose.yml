@@ -1,8 +1,9 @@
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
     container_name: collab-workspace-db
     # Note: Environment variables must be set in .env file
+    # Do not hardcode credentials - use environment variables
     environment:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -13,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      test: ["CMD-SHELL", "pg_isready -U \"${DB_USERNAME}\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,13 +30,13 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3000
       - API_VERSION=${API_VERSION:-v1}
-      - DB_HOST=postgres
+      - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
