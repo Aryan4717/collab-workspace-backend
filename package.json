@@ -14,7 +14,8 @@
     "typeorm": "ts-node ./node_modules/typeorm/cli -d ./src/config/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/Migration",
     "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "db:reset": "ts-node-dev --transpile-only src/scripts/reset-db.ts"
   },
   "keywords": [],
   "author": "",

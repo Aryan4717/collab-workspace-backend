@@ -7,6 +7,7 @@ import {
   WorkspaceResponse,
 } from '../../shared/entities/workspace.entity';
 import { User } from '../../shared/entities/user.entity';
+import { RoleService } from '../role/role.service';
 import logger from '../../shared/utils/logger';
 
 export class WorkspaceService {
@@ -45,6 +46,18 @@ export class WorkspaceService {
     });
 
     const savedWorkspace = await this.workspaceRepository.save(workspace);
+
+    // Automatically add owner as a member with OWNER role
+    const { WorkspaceMember } = await import('../../shared/entities/workspace-member.entity');
+    const { WorkspaceRole } = await import('../../shared/types/roles');
+    const memberRepository = AppDataSource.getRepository(WorkspaceMember);
+    const ownerMember = memberRepository.create({
+      workspaceId: savedWorkspace.id,
+      userId: ownerId,
+      role: WorkspaceRole.OWNER,
+    });
+    await memberRepository.save(ownerMember);
+
     logger.info('Workspace created successfully', {
       workspaceId: savedWorkspace.id,
       name: savedWorkspace.name,
@@ -53,28 +66,55 @@ export class WorkspaceService {
     return savedWorkspace.toResponse();
   }
 
-  static async findAll(ownerId: string): Promise<WorkspaceResponse[]> {
-    logger.debug('Fetching all workspaces for owner', { ownerId });
+  static async findAll(userId: string): Promise<WorkspaceResponse[]> {
+    logger.debug('Fetching all workspaces for user', { userId });
 
-    const workspaces = await this.workspaceRepository.find({
-      where: { ownerId },
+    // Get workspaces where user is owner
+    const ownedWorkspaces = await this.workspaceRepository.find({
+      where: { ownerId: userId },
       order: { createdAt: 'DESC' },
     });
 
-    return workspaces.map((workspace) => workspace.toResponse());
+    // Get workspaces where user is a member
+    const { WorkspaceMember } = await import('../../shared/entities/workspace-member.entity');
+    const memberRepository = AppDataSource.getRepository(WorkspaceMember);
+    const memberships = await memberRepository.find({
+      where: { userId },
+      relations: ['workspace'],
+      order: { createdAt: 'DESC' },
+    });
+
+    const memberWorkspaces = memberships.map((m) => m.workspace);
+
+    // Combine and deduplicate
+    const allWorkspaces = [...ownedWorkspaces];
+    memberWorkspaces.forEach((ws) => {
+      if (!allWorkspaces.find((w) => w.id === ws.id)) {
+        allWorkspaces.push(ws);
+      }
+    });
+
+    return allWorkspaces.map((workspace) => workspace.toResponse());
   }
 
-  static async findOne(id: string, ownerId: string): Promise<WorkspaceResponse> {
-    logger.debug('Fetching workspace', { workspaceId: id, ownerId });
+  static async findOne(id: string, userId: string): Promise<WorkspaceResponse> {
+    logger.debug('Fetching workspace', { workspaceId: id, userId });
 
     const workspace = await this.workspaceRepository.findOne({
-      where: { id, ownerId },
+      where: { id },
       relations: ['projects'],
     });
 
     if (!workspace) {
-      logger.warn('Workspace not found', { workspaceId: id, ownerId });
+      logger.warn('Workspace not found', { workspaceId: id });
       throw new Error('Workspace not found');
+    }
+
+    // Check if user has access (owner or member)
+    const role = await RoleService.getMemberRole(id, userId);
+    if (!role && workspace.ownerId !== userId) {
+      logger.warn('Workspace access denied', { workspaceId: id, userId });
+      throw new Error('Access denied');
     }
 
     return workspace.toResponse();
@@ -83,26 +123,35 @@ export class WorkspaceService {
   static async update(
     id: string,
     updateData: UpdateWorkspaceDto,
-    ownerId: string
+    userId: string
   ): Promise<WorkspaceResponse> {
-    logger.info('Updating workspace', { workspaceId: id, ownerId });
+    logger.info('Updating workspace', { workspaceId: id, userId });
 
     const workspace = await this.workspaceRepository.findOne({
-      where: { id, ownerId },
+      where: { id },
     });
 
     if (!workspace) {
       logger.warn('Workspace update failed: Workspace not found', {
         workspaceId: id,
-        ownerId,
       });
       throw new Error('Workspace not found');
     }
 
-    // Check if new name conflicts with existing workspace
+    // Check if user has edit permission
+    const canEdit = await RoleService.hasPermission(id, userId, 'canEdit');
+    if (!canEdit) {
+      logger.warn('Workspace update failed: Access denied', {
+        workspaceId: id,
+        userId,
+      });
+      throw new Error('Access denied. Insufficient permissions.');
+    }
+
+    // Check if new name conflicts with existing workspace (for same owner)
     if (updateData.name && updateData.name !== workspace.name) {
       const existingWorkspace = await this.workspaceRepository.findOne({
-        where: { name: updateData.name, ownerId },
+        where: { name: updateData.name, ownerId: workspace.ownerId },
       });
       if (existingWorkspace) {
         logger.warn('Workspace update failed: Name already exists', {
@@ -123,19 +172,27 @@ export class WorkspaceService {
     return updatedWorkspace.toResponse();
   }
 
-  static async delete(id: string, ownerId: string): Promise<void> {
-    logger.info('Deleting workspace', { workspaceId: id, ownerId });
+  static async delete(id: string, userId: string): Promise<void> {
+    logger.info('Deleting workspace', { workspaceId: id, userId });
 
     const workspace = await this.workspaceRepository.findOne({
-      where: { id, ownerId },
+      where: { id },
     });
 
     if (!workspace) {
       logger.warn('Workspace deletion failed: Workspace not found', {
         workspaceId: id,
-        ownerId,
       });
       throw new Error('Workspace not found');
+    }
+
+    // Only owner can delete workspace
+    if (workspace.ownerId !== userId) {
+      logger.warn('Workspace deletion failed: Only owner can delete', {
+        workspaceId: id,
+        userId,
+      });
+      throw new Error('Only workspace owner can delete the workspace');
     }
 
     await this.workspaceRepository.remove(workspace);

@@ -7,6 +7,7 @@ import {
   ProjectResponse,
 } from '../../shared/entities/project.entity';
 import { Workspace } from '../../shared/entities/workspace.entity';
+import { RoleService } from '../role/role.service';
 import logger from '../../shared/utils/logger';
 
 export class ProjectService {
@@ -17,24 +18,37 @@ export class ProjectService {
 
   static async create(
     projectData: CreateProjectDto,
-    ownerId: string
+    userId: string
   ): Promise<ProjectResponse> {
     logger.info('Creating project', {
       name: projectData.name,
       workspaceId: projectData.workspaceId,
     });
 
-    // Verify workspace exists and user owns it
+    // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
-      where: { id: projectData.workspaceId, ownerId },
+      where: { id: projectData.workspaceId },
     });
 
     if (!workspace) {
-      logger.warn('Project creation failed: Workspace not found or access denied', {
+      logger.warn('Project creation failed: Workspace not found', {
         workspaceId: projectData.workspaceId,
-        ownerId,
       });
-      throw new Error('Workspace not found or access denied');
+      throw new Error('Workspace not found');
+    }
+
+    // Check if user has edit permission
+    const canEdit = await RoleService.hasPermission(
+      projectData.workspaceId,
+      userId,
+      'canEdit'
+    );
+    if (!canEdit) {
+      logger.warn('Project creation failed: Access denied', {
+        workspaceId: projectData.workspaceId,
+        userId,
+      });
+      throw new Error('Access denied. Insufficient permissions.');
     }
 
     // Check if project with same name already exists in this workspace
@@ -64,20 +78,29 @@ export class ProjectService {
     return savedProject.toResponse();
   }
 
-  static async findAll(workspaceId: string, ownerId: string): Promise<ProjectResponse[]> {
-    logger.debug('Fetching all projects for workspace', { workspaceId, ownerId });
+  static async findAll(workspaceId: string, userId: string): Promise<ProjectResponse[]> {
+    logger.debug('Fetching all projects for workspace', { workspaceId, userId });
 
-    // Verify workspace ownership
+    // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId, ownerId },
+      where: { id: workspaceId },
     });
 
     if (!workspace) {
-      logger.warn('Project fetch failed: Workspace not found or access denied', {
+      logger.warn('Project fetch failed: Workspace not found', {
         workspaceId,
-        ownerId,
       });
-      throw new Error('Workspace not found or access denied');
+      throw new Error('Workspace not found');
+    }
+
+    // Check if user has view permission
+    const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
+    if (!canView) {
+      logger.warn('Project fetch failed: Access denied', {
+        workspaceId,
+        userId,
+      });
+      throw new Error('Access denied. Insufficient permissions.');
     }
 
     const projects = await this.projectRepository.find({
@@ -91,21 +114,30 @@ export class ProjectService {
   static async findOne(
     id: string,
     workspaceId: string,
-    ownerId: string
+    userId: string
   ): Promise<ProjectResponse> {
-    logger.debug('Fetching project', { projectId: id, workspaceId, ownerId });
+    logger.debug('Fetching project', { projectId: id, workspaceId, userId });
 
-    // Verify workspace ownership
+    // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId, ownerId },
+      where: { id: workspaceId },
     });
 
     if (!workspace) {
-      logger.warn('Project fetch failed: Workspace not found or access denied', {
+      logger.warn('Project fetch failed: Workspace not found', {
         workspaceId,
-        ownerId,
       });
-      throw new Error('Workspace not found or access denied');
+      throw new Error('Workspace not found');
+    }
+
+    // Check if user has view permission
+    const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
+    if (!canView) {
+      logger.warn('Project fetch failed: Access denied', {
+        workspaceId,
+        userId,
+      });
+      throw new Error('Access denied. Insufficient permissions.');
     }
 
     const project = await this.projectRepository.findOne({
@@ -124,21 +156,30 @@ export class ProjectService {
     id: string,
     updateData: UpdateProjectDto,
     workspaceId: string,
-    ownerId: string
+    userId: string
   ): Promise<ProjectResponse> {
-    logger.info('Updating project', { projectId: id, workspaceId, ownerId });
+    logger.info('Updating project', { projectId: id, workspaceId, userId });
 
-    // Verify workspace ownership
+    // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId, ownerId },
+      where: { id: workspaceId },
     });
 
     if (!workspace) {
-      logger.warn('Project update failed: Workspace not found or access denied', {
+      logger.warn('Project update failed: Workspace not found', {
         workspaceId,
-        ownerId,
       });
-      throw new Error('Workspace not found or access denied');
+      throw new Error('Workspace not found');
+    }
+
+    // Check if user has edit permission
+    const canEdit = await RoleService.hasPermission(workspaceId, userId, 'canEdit');
+    if (!canEdit) {
+      logger.warn('Project update failed: Access denied', {
+        workspaceId,
+        userId,
+      });
+      throw new Error('Access denied. Insufficient permissions.');
     }
 
     const project = await this.projectRepository.findOne({
@@ -180,21 +221,30 @@ export class ProjectService {
   static async delete(
     id: string,
     workspaceId: string,
-    ownerId: string
+    userId: string
   ): Promise<void> {
-    logger.info('Deleting project', { projectId: id, workspaceId, ownerId });
+    logger.info('Deleting project', { projectId: id, workspaceId, userId });
 
-    // Verify workspace ownership
+    // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId, ownerId },
+      where: { id: workspaceId },
     });
 
     if (!workspace) {
-      logger.warn('Project deletion failed: Workspace not found or access denied', {
+      logger.warn('Project deletion failed: Workspace not found', {
         workspaceId,
-        ownerId,
       });
-      throw new Error('Workspace not found or access denied');
+      throw new Error('Workspace not found');
+    }
+
+    // Check if user has delete permission
+    const canDelete = await RoleService.hasPermission(workspaceId, userId, 'canDelete');
+    if (!canDelete) {
+      logger.warn('Project deletion failed: Access denied', {
+        workspaceId,
+        userId,
+      });
+      throw new Error('Access denied. Insufficient permissions.');
     }
 
     const project = await this.projectRepository.findOne({

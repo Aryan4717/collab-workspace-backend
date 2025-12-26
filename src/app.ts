@@ -6,6 +6,8 @@ import healthRoutes from './modules/health/health.routes';
 import authRoutes from './modules/auth/auth.routes';
 import workspaceRoutes from './modules/workspace/workspace.routes';
 import projectRoutes from './modules/project/project.routes';
+import inviteRoutes from './modules/invite/invite.routes';
+import roleRoutes from './modules/role/role.routes';
 import { ApiResponse } from './shared/types';
 import { generalRateLimiter } from './shared/middleware/rateLimiter.middleware';
 import { httpLogger } from './shared/middleware/httpLogger.middleware';
@@ -26,6 +28,8 @@ app.use(`/api/${env.apiVersion}/health`, healthRoutes);
 app.use(`/api/${env.apiVersion}/auth`, authRoutes);
 app.use(`/api/${env.apiVersion}/workspaces`, workspaceRoutes);
 app.use(`/api/${env.apiVersion}/projects`, projectRoutes);
+app.use(`/api/${env.apiVersion}`, inviteRoutes);
+app.use(`/api/${env.apiVersion}`, roleRoutes);
 
 // Root route
 app.get('/', (_req: Request, res: Response): void => {
