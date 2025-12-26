@@ -1,7 +1,11 @@
 import express, { Application, Request, Response } from 'express';
+import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
+import { swaggerSpec } from './config/swagger';
 import healthRoutes from './modules/health/health.routes';
 import authRoutes from './modules/auth/auth.routes';
+import workspaceRoutes from './modules/workspace/workspace.routes';
+import projectRoutes from './modules/project/project.routes';
 import { ApiResponse } from './shared/types';
 import { generalRateLimiter } from './shared/middleware/rateLimiter.middleware';
 import { httpLogger } from './shared/middleware/httpLogger.middleware';
@@ -14,9 +18,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(httpLogger);
 app.use(generalRateLimiter);
 
+// Swagger documentation
+app.use(`/api/${env.apiVersion}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Routes
 app.use(`/api/${env.apiVersion}/health`, healthRoutes);
 app.use(`/api/${env.apiVersion}/auth`, authRoutes);
+app.use(`/api/${env.apiVersion}/workspaces`, workspaceRoutes);
+app.use(`/api/${env.apiVersion}/projects`, projectRoutes);
 
 // Root route
 app.get('/', (_req: Request, res: Response): void => {
