@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../../shared/types';
 import { AuthRequest } from '../../shared/middleware/auth.middleware';
+import logger from '../../shared/utils/logger';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -25,6 +26,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     };
     res.status(201).json(response);
   } catch (error) {
+    logger.error('Registration failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      email: req.body?.email,
+    });
     const response: ApiResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Registration failed',
@@ -55,6 +61,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     };
     res.status(200).json(response);
   } catch (error) {
+    logger.error('Login failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      email: req.body?.email,
+    });
     const response: ApiResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Login failed',
@@ -85,6 +95,9 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     };
     res.status(200).json(response);
   } catch (error) {
+    logger.error('Token refresh failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     const response: ApiResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Token refresh failed',
@@ -107,6 +120,9 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     };
     res.status(200).json(response);
   } catch (error) {
+    logger.error('Logout failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     const response: ApiResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Logout failed',
@@ -143,6 +159,11 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
     };
     res.status(200).json(response);
   } catch (error) {
+    logger.error('Failed to get user', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId: req.user?.userId,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     const response: ApiResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get user',

@@ -4,12 +4,14 @@ import healthRoutes from './modules/health/health.routes';
 import authRoutes from './modules/auth/auth.routes';
 import { ApiResponse } from './shared/types';
 import { generalRateLimiter } from './shared/middleware/rateLimiter.middleware';
+import { httpLogger } from './shared/middleware/httpLogger.middleware';
 
 const app: Application = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(httpLogger);
 app.use(generalRateLimiter);
 
 // Routes
