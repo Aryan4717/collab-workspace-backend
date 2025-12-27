@@ -3,6 +3,7 @@ import { WorkspaceService } from './workspace.service';
 import { ApiResponse } from '../../shared/types';
 import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { UpdateWorkspaceDto } from '../../shared/entities/workspace.entity';
+import { validateUUID } from '../../shared/utils/uuid.util';
 import logger from '../../shared/utils/logger';
 
 export const createWorkspace = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -94,6 +95,19 @@ export const getWorkspace = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const { id } = req.params;
+    
+    // Validate UUID format at controller level before calling service
+    try {
+      validateUUID(id, 'Workspace');
+    } catch (error) {
+      const response: ApiResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Workspace not found',
+      };
+      res.status(404).json(response);
+      return;
+    }
+
     const workspace = await WorkspaceService.findOne(id, req.user.userId);
 
     const response: ApiResponse = {
@@ -111,7 +125,10 @@ export const getWorkspace = async (req: AuthRequest, res: Response): Promise<voi
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch workspace',
     };
-    const statusCode = error instanceof Error && error.message === 'Workspace not found' ? 404 : 500;
+    // Return 404 for "not found" errors (invalid UUID or workspace not found)
+    const statusCode = error instanceof Error && 
+      (error.message === 'Workspace not found' || error.message.includes('not found')) 
+      ? 404 : 500;
     res.status(statusCode).json(response);
   }
 };
@@ -128,6 +145,19 @@ export const updateWorkspace = async (req: AuthRequest, res: Response): Promise<
     }
 
     const { id } = req.params;
+    
+    // Validate UUID format at controller level before calling service
+    try {
+      validateUUID(id, 'Workspace');
+    } catch (error) {
+      const response: ApiResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Workspace not found',
+      };
+      res.status(404).json(response);
+      return;
+    }
+
     const { name, description } = req.body;
 
     const updateData: UpdateWorkspaceDto = {};
@@ -169,6 +199,19 @@ export const deleteWorkspace = async (req: AuthRequest, res: Response): Promise<
     }
 
     const { id } = req.params;
+    
+    // Validate UUID format at controller level before calling service
+    try {
+      validateUUID(id, 'Workspace');
+    } catch (error) {
+      const response: ApiResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Workspace not found',
+      };
+      res.status(404).json(response);
+      return;
+    }
+
     await WorkspaceService.delete(id, req.user.userId);
 
     const response: ApiResponse = {
