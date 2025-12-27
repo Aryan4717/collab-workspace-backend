@@ -16,6 +16,7 @@ interface EnvConfig {
   dbUsername: string;
   dbPassword: string;
   dbName: string;
+  redisUrl?: string; // Railway/production connection URL
   redisHost: string;
   redisPort: number;
   redisPassword?: string;
@@ -42,6 +43,9 @@ const getEnvConfig = (): EnvConfig => {
   const dbPassword = process.env.DB_PASSWORD || 'postgres';
   const dbName = process.env.DB_NAME || 'collab_workspace';
 
+  // In production (Railway), prefer REDIS_URL if available
+  // In development, use individual Redis connection parameters
+  const redisUrl = process.env.REDIS_URL;
   const redisHost = process.env.REDIS_HOST || 'localhost';
   const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
   const redisPassword = process.env.REDIS_PASSWORD;
@@ -69,6 +73,7 @@ const getEnvConfig = (): EnvConfig => {
     dbUsername,
     dbPassword,
     dbName,
+    redisUrl,
     redisHost,
     redisPort,
     redisPassword,

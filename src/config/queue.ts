@@ -1,13 +1,25 @@
-import { Queue, QueueOptions } from 'bullmq';
+import { Queue, QueueOptions, ConnectionOptions } from 'bullmq';
 import { JobType } from '../shared/entities/job.entity';
 import logger from '../shared/utils/logger';
 import { env } from './env';
 
-const connection = {
-  host: env.redisHost || 'localhost',
-  port: env.redisPort || 6379,
-  password: env.redisPassword,
+// Build Redis connection config for BullMQ
+// BullMQ/ioredis supports both connection URL string and connection object
+// Use REDIS_URL in production (Railway), individual params in development
+const buildQueueConnection = (): ConnectionOptions => {
+  if (env.nodeEnv === 'production' && env.redisUrl) {
+    // BullMQ accepts connection URL string - cast to ConnectionOptions
+    return env.redisUrl as unknown as ConnectionOptions;
+  }
+  // Development: use connection object
+  return {
+    host: env.redisHost || 'localhost',
+    port: env.redisPort || 6379,
+    password: env.redisPassword,
+  };
 };
+
+const connection = buildQueueConnection();
 
 // BullMQ doesn't allow colons in queue names, so we sanitize them
 const sanitizeQueueName = (jobType: JobType): string => {
