@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import { swaggerSpec } from './config/swagger';
@@ -49,6 +49,15 @@ app.use((_req: Request, res: Response): void => {
     error: 'Route not found',
   };
   res.status(404).json(response);
+});
+
+// Error handling middleware (must be last)
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction): void => {
+  const response: ApiResponse = {
+    success: false,
+    error: err.message || 'Internal server error',
+  };
+  res.status(500).json(response);
 });
 
 export default app;

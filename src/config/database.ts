@@ -16,7 +16,7 @@ export const dataSourceOptions: DataSourceOptions = {
   password: env.dbPassword,
   database: env.dbName,
   entities: [User, RefreshToken, Workspace, Project, WorkspaceMember, WorkspaceInvite, Job],
-  synchronize: env.nodeEnv !== 'production', // Auto-sync in dev, use migrations in production
+  synchronize: env.nodeEnv !== 'production', // Auto-sync in dev and test (test !== production)
   logging: false, // Disable SQL query logging
   migrations: ['dist/migrations/*.js'],
   migrationsTableName: 'migrations',
