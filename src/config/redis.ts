@@ -48,10 +48,7 @@ const buildRedisOptions = (): {
 };
 
 // Create Redis instance with appropriate configuration
-const createRedisInstance = (
-  label: string,
-  url?: string
-): Redis => {
+const createRedisInstance = (label: string, url?: string): Redis => {
   const options = buildRedisOptions();
   const redisInstance = url ? new Redis(url, options) : new Redis(options);
 
