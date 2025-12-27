@@ -32,7 +32,7 @@ const getEnvConfig = (): EnvConfig => {
     'your-refresh-secret-key-change-in-production';
   const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '15m';
   const jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
-  
+
   // In production (Railway), prefer DATABASE_URL if available
   // In development, use individual DB connection parameters
   const databaseUrl = process.env.DATABASE_URL;
@@ -41,7 +41,7 @@ const getEnvConfig = (): EnvConfig => {
   const dbUsername = process.env.DB_USERNAME || 'postgres';
   const dbPassword = process.env.DB_PASSWORD || 'postgres';
   const dbName = process.env.DB_NAME || 'collab_workspace';
-  
+
   const redisHost = process.env.REDIS_HOST || 'localhost';
   const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
   const redisPassword = process.env.REDIS_PASSWORD;
