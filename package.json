@@ -16,7 +16,8 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "db:reset": "ts-node-dev --transpile-only src/scripts/reset-db.ts",
-    "test:websocket": "node test-websocket.js"
+    "test:websocket": "node test-websocket.js",
+    "test:caching": "node test-caching.js"
   },
   "keywords": [],
   "author": "",

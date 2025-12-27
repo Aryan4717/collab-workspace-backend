@@ -8,6 +8,7 @@ import {
 } from '../../shared/entities/project.entity';
 import { Workspace } from '../../shared/entities/workspace.entity';
 import { RoleService } from '../role/role.service';
+import { CacheService } from '../../shared/utils/cache.util';
 import logger from '../../shared/utils/logger';
 
 export class ProjectService {
@@ -75,16 +76,39 @@ export class ProjectService {
       name: savedProject.name,
     });
 
+    // Invalidate cache
+    await CacheService.invalidateProject(savedProject.id, savedProject.workspaceId);
+
     return savedProject.toResponse();
   }
 
   static async findAll(workspaceId: string, userId: string): Promise<ProjectResponse[]> {
     logger.debug('Fetching all projects for workspace', { workspaceId, userId });
 
-    // Verify workspace exists
-    const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId },
-    });
+    // Try to get from cache
+    const cacheKey = CacheService.projectListKey(workspaceId);
+    const cached = await CacheService.get<ProjectResponse[]>(cacheKey);
+    if (cached) {
+      logger.debug('Project list retrieved from cache', { workspaceId });
+      // Still need to check permissions
+      const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
+      if (!canView) {
+        logger.warn('Project fetch failed: Access denied', {
+          workspaceId,
+          userId,
+        });
+        throw new Error('Access denied. Insufficient permissions.');
+      }
+      return cached;
+    }
+
+    // Verify workspace exists and check permissions in parallel
+    const [workspace, canView] = await Promise.all([
+      this.workspaceRepository.findOne({
+        where: { id: workspaceId },
+      }),
+      RoleService.hasPermission(workspaceId, userId, 'canView'),
+    ]);
 
     if (!workspace) {
       logger.warn('Project fetch failed: Workspace not found', {
@@ -93,8 +117,6 @@ export class ProjectService {
       throw new Error('Workspace not found');
     }
 
-    // Check if user has view permission
-    const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
     if (!canView) {
       logger.warn('Project fetch failed: Access denied', {
         workspaceId,
@@ -108,7 +130,12 @@ export class ProjectService {
       order: { createdAt: 'DESC' },
     });
 
-    return projects.map((project) => project.toResponse());
+    const result = projects.map((project) => project.toResponse());
+
+    // Cache the result (5 minutes TTL for lists)
+    await CacheService.set(cacheKey, result, 300);
+
+    return result;
   }
 
   static async findOne(
@@ -118,10 +145,30 @@ export class ProjectService {
   ): Promise<ProjectResponse> {
     logger.debug('Fetching project', { projectId: id, workspaceId, userId });
 
-    // Verify workspace exists
-    const workspace = await this.workspaceRepository.findOne({
-      where: { id: workspaceId },
-    });
+    // Try to get from cache
+    const cacheKey = CacheService.projectKey(id);
+    const cached = await CacheService.get<ProjectResponse>(cacheKey);
+    if (cached) {
+      logger.debug('Project retrieved from cache', { projectId: id });
+      // Still need to check permissions
+      const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
+      if (!canView) {
+        logger.warn('Project fetch failed: Access denied', {
+          workspaceId,
+          userId,
+        });
+        throw new Error('Access denied. Insufficient permissions.');
+      }
+      return cached;
+    }
+
+    // Verify workspace exists and check permissions in parallel
+    const [workspace, canView] = await Promise.all([
+      this.workspaceRepository.findOne({
+        where: { id: workspaceId },
+      }),
+      RoleService.hasPermission(workspaceId, userId, 'canView'),
+    ]);
 
     if (!workspace) {
       logger.warn('Project fetch failed: Workspace not found', {
@@ -130,8 +177,6 @@ export class ProjectService {
       throw new Error('Workspace not found');
     }
 
-    // Check if user has view permission
-    const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
     if (!canView) {
       logger.warn('Project fetch failed: Access denied', {
         workspaceId,
@@ -149,7 +194,11 @@ export class ProjectService {
       throw new Error('Project not found');
     }
 
-    return project.toResponse();
+    const result = project.toResponse();
+    // Cache the result
+    await CacheService.set(cacheKey, result);
+
+    return result;
   }
 
   static async update(
@@ -215,6 +264,9 @@ export class ProjectService {
       projectId: updatedProject.id,
     });
 
+    // Invalidate cache
+    await CacheService.invalidateProject(updatedProject.id, workspaceId);
+
     return updatedProject.toResponse();
   }
 
@@ -261,6 +313,9 @@ export class ProjectService {
 
     await this.projectRepository.remove(project);
     logger.info('Project deleted successfully', { projectId: id });
+
+    // Invalidate cache
+    await CacheService.invalidateProject(id, workspaceId);
   }
 }
 

@@ -14,6 +14,8 @@ import { WorkspaceRole } from '../types/roles';
 
 @Entity('workspace_members')
 @Index(['workspaceId', 'userId'], { unique: true })
+@Index(['userId'])
+@Index(['workspaceId'])
 export class WorkspaceMember {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

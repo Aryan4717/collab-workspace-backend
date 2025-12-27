@@ -14,6 +14,7 @@ import { Project } from './project.entity';
 
 @Entity('workspaces')
 @Index(['ownerId', 'name'], { unique: true })
+@Index(['ownerId'])
 export class Workspace {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
