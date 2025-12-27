@@ -19,6 +19,59 @@ const startServer = async (): Promise<void> => {
       database: env.dbName,
     });
 
+    // Run pending migrations
+    try {
+      logger.info('Checking for pending migrations...');
+      const executedMigrations = await AppDataSource.runMigrations();
+      if (executedMigrations.length > 0) {
+        logger.info(
+          `Successfully ran ${executedMigrations.length} migration(s)`,
+          {
+            migrations: executedMigrations.map(m => m.name),
+          }
+        );
+      } else {
+        logger.info('Database is up to date - no pending migrations');
+      }
+    } catch (migrationError) {
+      // Check if error is due to tables already existing (local dev scenario)
+      const errorMessage =
+        migrationError instanceof Error
+          ? migrationError.message
+          : String(migrationError);
+      if (errorMessage.includes('already exists')) {
+        logger.warn(
+          'Migrations failed because tables already exist. This is normal in development.',
+          {
+            error: errorMessage,
+          }
+        );
+        // In development, if synchronize created tables, we can skip migrations
+        if (env.nodeEnv !== 'production') {
+          logger.info(
+            'Skipping migrations in development mode (tables already exist from synchronize)'
+          );
+        } else {
+          // In production, this is an error - migrations should be clean
+          logger.error(
+            'Tables already exist in production - this should not happen',
+            {
+              error: errorMessage,
+            }
+          );
+          throw migrationError;
+        }
+      } else {
+        // Other migration errors should still fail
+        logger.error('Error running migrations', {
+          error: errorMessage,
+          stack:
+            migrationError instanceof Error ? migrationError.stack : undefined,
+        });
+        throw migrationError;
+      }
+    }
+
     // Create HTTP server
     const httpServer = createServer(app);
 
