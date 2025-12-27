@@ -6,6 +6,7 @@ import { Workspace } from '../../shared/entities/workspace.entity';
 import { User } from '../../shared/entities/user.entity';
 import { WorkspaceRole } from '../../shared/types/roles';
 import { TokenUtil } from '../../shared/utils/token.util';
+import { CacheService } from '../../shared/utils/cache.util';
 import logger from '../../shared/utils/logger';
 
 export class InviteService {
@@ -104,8 +105,14 @@ export class InviteService {
       throw new Error('Invite has expired');
     }
 
-    // Verify user email matches invite email
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    // Verify user email matches invite email and check membership (parallel queries)
+    const [user, existingMember] = await Promise.all([
+      this.userRepository.findOne({ where: { id: userId } }),
+      this.memberRepository.findOne({
+        where: { workspaceId: invite.workspaceId, userId },
+      }),
+    ]);
+
     if (!user || user.email !== invite.email) {
       logger.warn('Invite acceptance failed: Email mismatch', {
         token,
@@ -114,11 +121,6 @@ export class InviteService {
       });
       throw new Error('This invite is not for your account');
     }
-
-    // Check if user is already a member
-    const existingMember = await this.memberRepository.findOne({
-      where: { workspaceId: invite.workspaceId, userId },
-    });
     if (existingMember) {
       invite.status = InviteStatus.ACCEPTED;
       await this.inviteRepository.save(invite);
@@ -138,6 +140,12 @@ export class InviteService {
     // Update invite status
     invite.status = InviteStatus.ACCEPTED;
     await this.inviteRepository.save(invite);
+
+    // Invalidate cache
+    await Promise.all([
+      CacheService.invalidateWorkspace(invite.workspaceId),
+      CacheService.invalidateUser(userId),
+    ]);
 
     logger.info('Invite accepted successfully', {
       inviteId: invite.id,

@@ -3,6 +3,7 @@ import { AppDataSource } from '../../config/database';
 import { WorkspaceMember } from '../../shared/entities/workspace-member.entity';
 import { Workspace } from '../../shared/entities/workspace.entity';
 import { WorkspaceRole, RolePermissions } from '../../shared/types/roles';
+import { CacheService } from '../../shared/utils/cache.util';
 import logger from '../../shared/utils/logger';
 
 export class RoleService {
@@ -64,6 +65,12 @@ export class RoleService {
       newRole: updatedMember.role,
     });
 
+    // Invalidate cache for this member's role and permissions
+    await Promise.all([
+      CacheService.delete(CacheService.memberRoleKey(workspaceId, member.userId)),
+      CacheService.invalidatePattern(CacheService.permissionKey(workspaceId, member.userId, '*')),
+    ]);
+
     return updatedMember;
   }
 
@@ -106,6 +113,12 @@ export class RoleService {
 
     await this.memberRepository.remove(member);
     logger.info('Member removed successfully', { memberId });
+
+    // Invalidate cache for this member
+    await Promise.all([
+      CacheService.delete(CacheService.memberRoleKey(workspaceId, member.userId)),
+      CacheService.invalidatePattern(CacheService.permissionKey(workspaceId, member.userId, '*')),
+    ]);
   }
 
   static async getWorkspaceMembers(
@@ -137,11 +150,20 @@ export class RoleService {
     workspaceId: string,
     userId: string
   ): Promise<WorkspaceRole | null> {
+    // Try to get from cache
+    const cacheKey = CacheService.memberRoleKey(workspaceId, userId);
+    const cached = await CacheService.get<WorkspaceRole>(cacheKey);
+    if (cached !== null) {
+      logger.debug('Member role retrieved from cache', { workspaceId, userId });
+      return cached;
+    }
+
     // Check if user is the workspace owner
     const workspace = await this.workspaceRepository.findOne({
       where: { id: workspaceId, ownerId: userId },
     });
     if (workspace) {
+      await CacheService.set(cacheKey, WorkspaceRole.OWNER, 1800); // 30 minutes
       return WorkspaceRole.OWNER;
     }
 
@@ -150,7 +172,12 @@ export class RoleService {
       where: { workspaceId, userId },
     });
 
-    return member ? member.role : null;
+    const role = member ? member.role : null;
+    if (role) {
+      await CacheService.set(cacheKey, role, 1800); // 30 minutes
+    }
+
+    return role;
   }
 
   static async hasPermission(
@@ -158,14 +185,32 @@ export class RoleService {
     userId: string,
     permission: keyof RolePermissions
   ): Promise<boolean> {
+    // Try to get from cache
+    const cacheKey = CacheService.permissionKey(workspaceId, userId, permission);
+    const cached = await CacheService.get<boolean>(cacheKey);
+    if (cached !== null) {
+      logger.debug('Permission check retrieved from cache', {
+        workspaceId,
+        userId,
+        permission,
+      });
+      return cached;
+    }
+
     const role = await this.getMemberRole(workspaceId, userId);
     if (!role) {
+      await CacheService.set(cacheKey, false, 1800); // 30 minutes
       return false;
     }
 
     const { ROLE_PERMISSIONS } = await import('../../shared/types/roles');
     const permissions = ROLE_PERMISSIONS[role];
-    return permissions ? permissions[permission] : false;
+    const hasPermission = permissions ? permissions[permission] : false;
+
+    // Cache the result
+    await CacheService.set(cacheKey, hasPermission, 1800); // 30 minutes
+
+    return hasPermission;
   }
 }
 

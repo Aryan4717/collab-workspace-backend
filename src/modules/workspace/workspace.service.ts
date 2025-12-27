@@ -8,6 +8,7 @@ import {
 } from '../../shared/entities/workspace.entity';
 import { User } from '../../shared/entities/user.entity';
 import { RoleService } from '../role/role.service';
+import { CacheService } from '../../shared/utils/cache.util';
 import logger from '../../shared/utils/logger';
 
 export class WorkspaceService {
@@ -63,26 +64,39 @@ export class WorkspaceService {
       name: savedWorkspace.name,
     });
 
+    // Invalidate user's workspace list cache
+    await CacheService.invalidateUser(ownerId);
+
     return savedWorkspace.toResponse();
   }
 
   static async findAll(userId: string): Promise<WorkspaceResponse[]> {
     logger.debug('Fetching all workspaces for user', { userId });
 
-    // Get workspaces where user is owner
-    const ownedWorkspaces = await this.workspaceRepository.find({
-      where: { ownerId: userId },
-      order: { createdAt: 'DESC' },
-    });
+    // Try to get from cache
+    const cacheKey = CacheService.workspaceListKey(userId);
+    const cached = await CacheService.get<WorkspaceResponse[]>(cacheKey);
+    if (cached) {
+      logger.debug('Workspace list retrieved from cache', { userId });
+      return cached;
+    }
 
-    // Get workspaces where user is a member
-    const { WorkspaceMember } = await import('../../shared/entities/workspace-member.entity');
-    const memberRepository = AppDataSource.getRepository(WorkspaceMember);
-    const memberships = await memberRepository.find({
-      where: { userId },
-      relations: ['workspace'],
-      order: { createdAt: 'DESC' },
-    });
+    // Fetch from database in parallel
+    const [ownedWorkspaces, memberships] = await Promise.all([
+      this.workspaceRepository.find({
+        where: { ownerId: userId },
+        order: { createdAt: 'DESC' },
+      }),
+      (async () => {
+        const { WorkspaceMember } = await import('../../shared/entities/workspace-member.entity');
+        const memberRepository = AppDataSource.getRepository(WorkspaceMember);
+        return memberRepository.find({
+          where: { userId },
+          relations: ['workspace'],
+          order: { createdAt: 'DESC' },
+        });
+      })(),
+    ]);
 
     const memberWorkspaces = memberships.map((m) => m.workspace);
 
@@ -94,11 +108,30 @@ export class WorkspaceService {
       }
     });
 
-    return allWorkspaces.map((workspace) => workspace.toResponse());
+    const result = allWorkspaces.map((workspace) => workspace.toResponse());
+
+    // Cache the result (5 minutes TTL for lists)
+    await CacheService.set(cacheKey, result, 300);
+
+    return result;
   }
 
   static async findOne(id: string, userId: string): Promise<WorkspaceResponse> {
     logger.debug('Fetching workspace', { workspaceId: id, userId });
+
+    // Try to get from cache
+    const cacheKey = CacheService.workspaceKey(id);
+    const cached = await CacheService.get<WorkspaceResponse>(cacheKey);
+    if (cached) {
+      logger.debug('Workspace retrieved from cache', { workspaceId: id });
+      // Still need to check permissions
+      const role = await RoleService.getMemberRole(id, userId);
+      if (!role && cached.ownerId !== userId) {
+        logger.warn('Workspace access denied', { workspaceId: id, userId });
+        throw new Error('Access denied');
+      }
+      return cached;
+    }
 
     const workspace = await this.workspaceRepository.findOne({
       where: { id },
@@ -117,7 +150,11 @@ export class WorkspaceService {
       throw new Error('Access denied');
     }
 
-    return workspace.toResponse();
+    const result = workspace.toResponse();
+    // Cache the result
+    await CacheService.set(cacheKey, result);
+
+    return result;
   }
 
   static async update(
@@ -169,6 +206,9 @@ export class WorkspaceService {
       workspaceId: updatedWorkspace.id,
     });
 
+    // Invalidate cache
+    await CacheService.invalidateWorkspace(updatedWorkspace.id);
+
     return updatedWorkspace.toResponse();
   }
 
@@ -197,6 +237,9 @@ export class WorkspaceService {
 
     await this.workspaceRepository.remove(workspace);
     logger.info('Workspace deleted successfully', { workspaceId: id });
+
+    // Invalidate cache
+    await CacheService.invalidateWorkspace(id);
   }
 
   static async verifyOwnership(workspaceId: string, userId: string): Promise<boolean> {

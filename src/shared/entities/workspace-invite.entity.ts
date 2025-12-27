@@ -22,6 +22,9 @@ export enum InviteStatus {
 @Entity('workspace_invites')
 @Index(['workspaceId', 'email'], { unique: true })
 @Index(['token'], { unique: true })
+@Index(['workspaceId'])
+@Index(['email'])
+@Index(['status'])
 export class WorkspaceInvite {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
