@@ -53,4 +53,3 @@ const startWorker = async (): Promise<void> => {
 };
 
 startWorker();
-

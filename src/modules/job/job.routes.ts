@@ -117,7 +117,10 @@ router.get('/:jobId', authMiddleware, jobController.getJob.bind(jobController));
  *       404:
  *         description: Job not found or cannot be cancelled
  */
-router.post('/:jobId/cancel', authMiddleware, jobController.cancelJob.bind(jobController));
+router.post(
+  '/:jobId/cancel',
+  authMiddleware,
+  jobController.cancelJob.bind(jobController)
+);
 
 export default router;
-

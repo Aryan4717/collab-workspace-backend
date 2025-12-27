@@ -40,7 +40,7 @@ class QueueManager {
       const queueName = sanitizeQueueName(jobType);
       const queue = new Queue(queueName, defaultQueueOptions);
 
-      queue.on('error', (error) => {
+      queue.on('error', error => {
         logger.error('Queue error', {
           queue: jobType,
           error: error.message,
@@ -145,7 +145,9 @@ class QueueManager {
   }
 
   async closeAll(): Promise<void> {
-    const closePromises = Array.from(this.queues.values()).map((queue) => queue.close());
+    const closePromises = Array.from(this.queues.values()).map(queue =>
+      queue.close()
+    );
     await Promise.all(closePromises);
     this.queues.clear();
     logger.info('All queues closed');
@@ -153,4 +155,3 @@ class QueueManager {
 }
 
 export const queueManager = new QueueManager();
-

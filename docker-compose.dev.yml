@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: collab-workspace-db-dev
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=collab_workspace
+      - POSTGRES_USER=${DB_USERNAME:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-collab_workspace}
     ports:
       - "5432:5432"
     volumes:

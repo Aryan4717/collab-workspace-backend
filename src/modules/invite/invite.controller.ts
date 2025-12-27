@@ -5,7 +5,10 @@ import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { WorkspaceRole } from '../../shared/types/roles';
 import logger from '../../shared/utils/logger';
 
-export const sendInvite = async (req: AuthRequest, res: Response): Promise<void> => {
+export const sendInvite = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -60,7 +63,10 @@ export const sendInvite = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
-export const acceptInvite = async (req: AuthRequest, res: Response): Promise<void> => {
+export const acceptInvite = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -103,7 +109,10 @@ export const acceptInvite = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
-export const declineInvite = async (req: AuthRequest, res: Response): Promise<void> => {
+export const declineInvite = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -139,13 +148,17 @@ export const declineInvite = async (req: AuthRequest, res: Response): Promise<vo
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to decline invite',
+      error:
+        error instanceof Error ? error.message : 'Failed to decline invite',
     };
     res.status(400).json(response);
   }
 };
 
-export const getWorkspaceInvites = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getWorkspaceInvites = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -157,11 +170,14 @@ export const getWorkspaceInvites = async (req: AuthRequest, res: Response): Prom
     }
 
     const { workspaceId } = req.params;
-    const invites = await InviteService.getInvitesByWorkspace(workspaceId, req.user.userId);
+    const invites = await InviteService.getInvitesByWorkspace(
+      workspaceId,
+      req.user.userId
+    );
 
     const response: ApiResponse = {
       success: true,
-      data: invites.map((invite) => ({
+      data: invites.map(invite => ({
         ...invite.toResponse(),
         token: invite.token, // Include token for testing purposes
       })),
@@ -181,7 +197,10 @@ export const getWorkspaceInvites = async (req: AuthRequest, res: Response): Prom
   }
 };
 
-export const cancelInvite = async (req: AuthRequest, res: Response): Promise<void> => {
+export const cancelInvite = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -211,8 +230,8 @@ export const cancelInvite = async (req: AuthRequest, res: Response): Promise<voi
       success: false,
       error: error instanceof Error ? error.message : 'Failed to cancel invite',
     };
-    const statusCode = error instanceof Error && error.message === 'Access denied' ? 403 : 400;
+    const statusCode =
+      error instanceof Error && error.message === 'Access denied' ? 403 : 400;
     res.status(statusCode).json(response);
   }
 };
-

@@ -22,7 +22,11 @@ app.use(httpLogger);
 app.use(generalRateLimiter);
 
 // Swagger documentation
-app.use(`/api/${env.apiVersion}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  `/api/${env.apiVersion}/docs`,
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Routes
 app.use(`/api/${env.apiVersion}/health`, healthRoutes);
@@ -52,13 +56,14 @@ app.use((_req: Request, res: Response): void => {
 });
 
 // Error handling middleware (must be last)
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction): void => {
-  const response: ApiResponse = {
-    success: false,
-    error: err.message || 'Internal server error',
-  };
-  res.status(500).json(response);
-});
+app.use(
+  (err: Error, _req: Request, res: Response, _next: NextFunction): void => {
+    const response: ApiResponse = {
+      success: false,
+      error: err.message || 'Internal server error',
+    };
+    res.status(500).json(response);
+  }
+);
 
 export default app;
-

@@ -15,8 +15,10 @@ export const socketAuthMiddleware = (
   try {
     // Try multiple sources for token (auth object, Authorization header, or query parameter)
     const queryToken = socket.handshake.query?.token;
-    const tokenFromQuery = Array.isArray(queryToken) ? queryToken[0] : queryToken;
-    
+    const tokenFromQuery = Array.isArray(queryToken)
+      ? queryToken[0]
+      : queryToken;
+
     const token =
       socket.handshake.auth?.token ||
       socket.handshake.headers?.authorization?.replace('Bearer ', '') ||
@@ -48,4 +50,3 @@ export const socketAuthMiddleware = (
     next(new Error('Authentication error: Invalid token'));
   }
 };
-

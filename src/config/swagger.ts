@@ -7,7 +7,8 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Collaborative Workspace Backend API',
       version: '1.0.0',
-      description: 'REST API for managing workspaces and projects in a collaborative workspace platform',
+      description:
+        'REST API for managing workspaces and projects in a collaborative workspace platform',
       contact: {
         name: 'API Support',
       },
@@ -162,4 +163,3 @@ const options: swaggerJsdoc.Options = {
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
-

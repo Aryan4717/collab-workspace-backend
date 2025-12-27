@@ -1,6 +1,9 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../config/database';
-import { WorkspaceInvite, InviteStatus } from '../../shared/entities/workspace-invite.entity';
+import {
+  WorkspaceInvite,
+  InviteStatus,
+} from '../../shared/entities/workspace-invite.entity';
 import { WorkspaceMember } from '../../shared/entities/workspace-member.entity';
 import { Workspace } from '../../shared/entities/workspace.entity';
 import { User } from '../../shared/entities/user.entity';
@@ -16,7 +19,8 @@ export class InviteService {
     AppDataSource.getRepository(WorkspaceMember);
   private static workspaceRepository: Repository<Workspace> =
     AppDataSource.getRepository(Workspace);
-  private static userRepository: Repository<User> = AppDataSource.getRepository(User);
+  private static userRepository: Repository<User> =
+    AppDataSource.getRepository(User);
 
   static async sendInvite(
     workspaceId: string,
@@ -24,7 +28,12 @@ export class InviteService {
     role: WorkspaceRole,
     invitedById: string
   ): Promise<WorkspaceInvite> {
-    logger.info('Sending workspace invite', { workspaceId, email, role, invitedById });
+    logger.info('Sending workspace invite', {
+      workspaceId,
+      email,
+      role,
+      invitedById,
+    });
 
     // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
@@ -42,7 +51,10 @@ export class InviteService {
         where: { workspaceId, userId: invitedUser.id },
       });
       if (existingMember) {
-        logger.warn('Invite failed: User is already a member', { workspaceId, email });
+        logger.warn('Invite failed: User is already a member', {
+          workspaceId,
+          email,
+        });
         throw new Error('User is already a member of this workspace');
       }
     }
@@ -52,7 +64,10 @@ export class InviteService {
       where: { workspaceId, email, status: InviteStatus.PENDING },
     });
     if (existingInvite) {
-      logger.warn('Invite failed: Pending invite already exists', { workspaceId, email });
+      logger.warn('Invite failed: Pending invite already exists', {
+        workspaceId,
+        email,
+      });
       throw new Error('A pending invite already exists for this user');
     }
 
@@ -72,12 +87,18 @@ export class InviteService {
     });
 
     const savedInvite = await this.inviteRepository.save(invite);
-    logger.info('Invite sent successfully', { inviteId: savedInvite.id, email });
+    logger.info('Invite sent successfully', {
+      inviteId: savedInvite.id,
+      email,
+    });
 
     return savedInvite;
   }
 
-  static async acceptInvite(token: string, userId: string): Promise<WorkspaceMember> {
+  static async acceptInvite(
+    token: string,
+    userId: string
+  ): Promise<WorkspaceMember> {
     logger.info('Accepting workspace invite', { token, userId });
 
     const invite = await this.inviteRepository.findOne({
@@ -124,7 +145,10 @@ export class InviteService {
     if (existingMember) {
       invite.status = InviteStatus.ACCEPTED;
       await this.inviteRepository.save(invite);
-      logger.warn('Invite acceptance: User already a member', { token, userId });
+      logger.warn('Invite acceptance: User already a member', {
+        token,
+        userId,
+      });
       throw new Error('You are already a member of this workspace');
     }
 
@@ -204,7 +228,10 @@ export class InviteService {
     });
 
     if (!member) {
-      logger.warn('Failed to fetch invites: Not a member', { workspaceId, userId });
+      logger.warn('Failed to fetch invites: Not a member', {
+        workspaceId,
+        userId,
+      });
       throw new Error('Access denied');
     }
 
@@ -217,7 +244,11 @@ export class InviteService {
     return invites;
   }
 
-  static async cancelInvite(inviteId: string, workspaceId: string, userId: string): Promise<void> {
+  static async cancelInvite(
+    inviteId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<void> {
     logger.info('Cancelling invite', { inviteId, workspaceId, userId });
 
     // Verify user has permission (owner or the person who sent the invite)
@@ -258,4 +289,3 @@ export class InviteService {
     logger.info('Invite cancelled successfully', { inviteId });
   }
 }
-

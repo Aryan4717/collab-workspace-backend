@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { JobService } from './job.service';
-import { CreateJobDto, JobType, JobStatus } from '../../shared/entities/job.entity';
+import {
+  CreateJobDto,
+  JobType,
+  JobStatus,
+} from '../../shared/entities/job.entity';
 import { ApiResponse } from '../../shared/types';
 import logger from '../../shared/utils/logger';
 
@@ -98,8 +102,12 @@ export class JobController {
 
       const status = req.query.status as JobStatus | undefined;
       const type = req.query.type as JobType | undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
-      const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
+      const limit = req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : 20;
+      const offset = req.query.offset
+        ? parseInt(req.query.offset as string, 10)
+        : 0;
 
       const result = await jobService.getJobsByUser(userId, {
         status,
@@ -170,4 +178,3 @@ export class JobController {
     }
   }
 }
-

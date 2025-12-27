@@ -15,7 +15,8 @@ import logger from '../../shared/utils/logger';
 export class WorkspaceService {
   private static workspaceRepository: Repository<Workspace> =
     AppDataSource.getRepository(Workspace);
-  private static userRepository: Repository<User> = AppDataSource.getRepository(User);
+  private static userRepository: Repository<User> =
+    AppDataSource.getRepository(User);
 
   static async create(
     workspaceData: CreateWorkspaceDto,
@@ -50,7 +51,8 @@ export class WorkspaceService {
     const savedWorkspace = await this.workspaceRepository.save(workspace);
 
     // Automatically add owner as a member with OWNER role
-    const { WorkspaceMember } = await import('../../shared/entities/workspace-member.entity');
+    const { WorkspaceMember } =
+      await import('../../shared/entities/workspace-member.entity');
     const { WorkspaceRole } = await import('../../shared/types/roles');
     const memberRepository = AppDataSource.getRepository(WorkspaceMember);
     const ownerMember = memberRepository.create({
@@ -89,7 +91,8 @@ export class WorkspaceService {
         order: { createdAt: 'DESC' },
       }),
       (async () => {
-        const { WorkspaceMember } = await import('../../shared/entities/workspace-member.entity');
+        const { WorkspaceMember } =
+          await import('../../shared/entities/workspace-member.entity');
         const memberRepository = AppDataSource.getRepository(WorkspaceMember);
         return memberRepository.find({
           where: { userId },
@@ -99,17 +102,17 @@ export class WorkspaceService {
       })(),
     ]);
 
-    const memberWorkspaces = memberships.map((m) => m.workspace);
+    const memberWorkspaces = memberships.map(m => m.workspace);
 
     // Combine and deduplicate
     const allWorkspaces = [...ownedWorkspaces];
-    memberWorkspaces.forEach((ws) => {
-      if (!allWorkspaces.find((w) => w.id === ws.id)) {
+    memberWorkspaces.forEach(ws => {
+      if (!allWorkspaces.find(w => w.id === ws.id)) {
         allWorkspaces.push(ws);
       }
     });
 
-    const result = allWorkspaces.map((workspace) => workspace.toResponse());
+    const result = allWorkspaces.map(workspace => workspace.toResponse());
 
     // Cache the result (5 minutes TTL for lists)
     await CacheService.set(cacheKey, result, 300);
@@ -243,7 +246,10 @@ export class WorkspaceService {
     await CacheService.invalidateWorkspace(id);
   }
 
-  static async verifyOwnership(workspaceId: string, userId: string): Promise<boolean> {
+  static async verifyOwnership(
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     // Validate UUID format before querying database
     // Use isValidUUID (non-throwing) for boolean check
     if (!isValidUUID(workspaceId)) {
@@ -256,4 +262,3 @@ export class WorkspaceService {
     return !!workspace;
   }
 }
-

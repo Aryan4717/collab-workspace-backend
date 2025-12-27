@@ -5,4 +5,3 @@ export class TokenUtil {
     return randomBytes(32).toString('hex');
   }
 }
-

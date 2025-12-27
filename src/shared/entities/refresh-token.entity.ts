@@ -33,4 +33,3 @@ export class RefreshToken {
   @CreateDateColumn()
   createdAt!: Date;
 }
-

@@ -98,4 +98,3 @@ export interface WorkspaceInviteResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-

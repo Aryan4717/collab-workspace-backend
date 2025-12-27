@@ -45,26 +45,26 @@ const startServer = async (): Promise<void> => {
     // Graceful shutdown
     const gracefulShutdown = async (signal: string) => {
       logger.warn(`${signal} signal received: closing server`);
-      
+
       httpServer.close(async () => {
         // Close WebSocket server
         socketService.close();
-        
+
         // Close worker service (only if it was initialized)
         if (process.env.WORKER_ENABLED === 'true') {
           await workerService.closeAll();
           logger.info('Worker service closed');
         }
-        
+
         // Close queue manager
         await queueManager.closeAll();
-        
+
         // Close Redis connections
         await closeRedisConnections();
-        
+
         // Close database connection
         await AppDataSource.destroy();
-        
+
         logger.info('Database connection closed');
         logger.info('Redis connections closed');
         logger.info('WebSocket server closed');
@@ -93,4 +93,3 @@ const startServer = async (): Promise<void> => {
 };
 
 startServer();
-

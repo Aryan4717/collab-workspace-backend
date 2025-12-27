@@ -73,4 +73,3 @@ export interface WorkspaceMemberResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-

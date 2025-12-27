@@ -7,13 +7,15 @@ async function resetDatabase() {
     await AppDataSource.initialize();
 
     console.log('🗑️  Dropping all tables...');
-    
+
     // Drop all tables
     await AppDataSource.dropDatabase();
 
     console.log('✅ Database reset complete!');
-    console.log('💡 Restart your server to recreate tables automatically (synchronize is enabled in dev mode)');
-    
+    console.log(
+      '💡 Restart your server to recreate tables automatically (synchronize is enabled in dev mode)'
+    );
+
     await AppDataSource.destroy();
     process.exit(0);
   } catch (error) {
@@ -23,4 +25,3 @@ async function resetDatabase() {
 }
 
 resetDatabase();
-

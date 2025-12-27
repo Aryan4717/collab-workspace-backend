@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum JobStatus {
   PENDING = 'pending',
@@ -87,4 +93,3 @@ export interface JobResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-
