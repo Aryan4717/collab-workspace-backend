@@ -50,10 +50,15 @@ export class CreateWorkspaceMembers1735340892006 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "workspace_members" DROP CONSTRAINT IF EXISTS "FK_workspace_members_workspaceId"`
     );
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_members_workspaceId"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_members_userId"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_members_workspaceId_userId"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_members_workspaceId"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_members_userId"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_members_workspaceId_userId"`
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "workspace_members"`);
   }
 }
-

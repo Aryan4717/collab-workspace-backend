@@ -61,12 +61,21 @@ export class CreateWorkspaceInvites1735340892007 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "workspace_invites" DROP CONSTRAINT IF EXISTS "FK_workspace_invites_workspaceId"`
     );
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_invites_status"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_invites_email"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_invites_workspaceId"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_invites_token"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_workspace_invites_workspaceId_email"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_invites_status"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_invites_email"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_invites_workspaceId"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_invites_token"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_workspace_invites_workspaceId_email"`
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "workspace_invites"`);
   }
 }
-

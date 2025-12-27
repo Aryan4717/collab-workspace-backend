@@ -40,8 +40,9 @@ export class CreateProjects1735340892005 implements MigrationInterface {
       `ALTER TABLE "projects" DROP CONSTRAINT IF EXISTS "FK_projects_workspaceId"`
     );
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_projects_workspaceId"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_projects_workspaceId_name"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_projects_workspaceId_name"`
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "projects"`);
   }
 }
-

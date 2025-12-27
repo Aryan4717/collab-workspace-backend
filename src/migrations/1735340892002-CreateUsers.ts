@@ -23,7 +23,7 @@ export class CreateUsers1735340892002 implements MigrationInterface {
         CONSTRAINT "PK_users" PRIMARY KEY ("id")
       )
     `);
-    
+
     // Create index if it doesn't exist
     const indexExists = await queryRunner.query(`
       SELECT 1 FROM pg_indexes WHERE indexname = 'IDX_users_email'
@@ -40,4 +40,3 @@ export class CreateUsers1735340892002 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
   }
 }
-

@@ -33,4 +33,3 @@ export class CreateEnumsAndExtensions1735340892001 implements MigrationInterface
     await queryRunner.query(`DROP TYPE IF EXISTS "workspace_role_enum"`);
   }
 }
-

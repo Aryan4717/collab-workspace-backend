@@ -42,10 +42,11 @@ export class CreateRefreshTokens1735340892003 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "refresh_tokens" DROP CONSTRAINT IF EXISTS "FK_refresh_tokens_userId"`
     );
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_refresh_tokens_expiresAt"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_refresh_tokens_expiresAt"`
+    );
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_refresh_tokens_userId"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_refresh_tokens_token"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "refresh_tokens"`);
   }
 }
-

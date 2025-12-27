@@ -38,4 +38,3 @@ export class CreateJobs1735340892008 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "jobs"`);
   }
 }
-
