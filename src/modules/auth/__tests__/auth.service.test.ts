@@ -8,7 +8,11 @@ import { AppDataSource } from '../../../config/database';
 import { User } from '../../../shared/entities/user.entity';
 import { RefreshToken } from '../../../shared/entities/refresh-token.entity';
 import { JwtUtil } from '../../../shared/utils/jwt.util';
-import { createMockUser, createMockRefreshToken, createMockRepository } from '../../../__tests__/helpers/test-helpers';
+import {
+  createMockUser,
+  createMockRefreshToken,
+  createMockRepository,
+} from '../../../__tests__/helpers/test-helpers';
 
 describe('AuthService', () => {
   let mockUserRepository: jest.Mocked<any>;
@@ -20,7 +24,7 @@ describe('AuthService', () => {
     mockRefreshTokenRepository = createMockRepository<RefreshToken>();
 
     // Mock AppDataSource.getRepository to return our mocks
-    (AppDataSource.getRepository as jest.Mock) = jest.fn((entity) => {
+    (AppDataSource.getRepository as jest.Mock) = jest.fn(entity => {
       if (entity === User) return mockUserRepository;
       if (entity === RefreshToken) return mockRefreshTokenRepository;
       return createMockRepository();
@@ -60,9 +64,15 @@ describe('AuthService', () => {
 
       mockUserRepository.findOne.mockResolvedValue(null);
       mockUserRepository.create.mockReturnValue(createMockUser(userData));
-      mockUserRepository.save.mockResolvedValue(createMockUser({ ...userData, id: 'new-user-id' }));
-      mockRefreshTokenRepository.create.mockReturnValue(createMockRefreshToken());
-      mockRefreshTokenRepository.save.mockResolvedValue(createMockRefreshToken());
+      mockUserRepository.save.mockResolvedValue(
+        createMockUser({ ...userData, id: 'new-user-id' })
+      );
+      mockRefreshTokenRepository.create.mockReturnValue(
+        createMockRefreshToken()
+      );
+      mockRefreshTokenRepository.save.mockResolvedValue(
+        createMockRefreshToken()
+      );
 
       const result = await AuthService.register(userData);
 
@@ -84,7 +94,9 @@ describe('AuthService', () => {
         name: 'Existing User',
       };
 
-      mockUserRepository.findOne.mockResolvedValue(createMockUser({ email: userData.email }));
+      mockUserRepository.findOne.mockResolvedValue(
+        createMockUser({ email: userData.email })
+      );
 
       await expect(AuthService.register(userData)).rejects.toThrow(
         'User with this email already exists'
@@ -101,9 +113,15 @@ describe('AuthService', () => {
 
       mockUserRepository.findOne.mockResolvedValue(null);
       mockUserRepository.create.mockReturnValue(createMockUser(userData));
-      mockUserRepository.save.mockResolvedValue(createMockUser({ ...userData, id: 'new-user-id' }));
-      mockRefreshTokenRepository.create.mockReturnValue(createMockRefreshToken());
-      mockRefreshTokenRepository.save.mockResolvedValue(createMockRefreshToken());
+      mockUserRepository.save.mockResolvedValue(
+        createMockUser({ ...userData, id: 'new-user-id' })
+      );
+      mockRefreshTokenRepository.create.mockReturnValue(
+        createMockRefreshToken()
+      );
+      mockRefreshTokenRepository.save.mockResolvedValue(
+        createMockRefreshToken()
+      );
 
       await AuthService.register(userData);
 
@@ -118,14 +136,21 @@ describe('AuthService', () => {
       const mockUser = createMockUser({ email, password: 'hashed-password' });
 
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      mockRefreshTokenRepository.create.mockReturnValue(createMockRefreshToken());
-      mockRefreshTokenRepository.save.mockResolvedValue(createMockRefreshToken());
+      mockRefreshTokenRepository.create.mockReturnValue(
+        createMockRefreshToken()
+      );
+      mockRefreshTokenRepository.save.mockResolvedValue(
+        createMockRefreshToken()
+      );
 
       const result = await AuthService.login(email, password);
 
       expect(result.user).toBeDefined();
       expect(result.tokens).toBeDefined();
-      expect(User.comparePassword).toHaveBeenCalledWith(password, mockUser.password);
+      expect(User.comparePassword).toHaveBeenCalledWith(
+        password,
+        mockUser.password
+      );
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { email },
       });
@@ -167,8 +192,12 @@ describe('AuthService', () => {
 
       mockRefreshTokenRepository.findOne.mockResolvedValue(mockTokenEntity);
       mockRefreshTokenRepository.remove.mockResolvedValue(mockTokenEntity);
-      mockRefreshTokenRepository.create.mockReturnValue(createMockRefreshToken());
-      mockRefreshTokenRepository.save.mockResolvedValue(createMockRefreshToken());
+      mockRefreshTokenRepository.create.mockReturnValue(
+        createMockRefreshToken()
+      );
+      mockRefreshTokenRepository.save.mockResolvedValue(
+        createMockRefreshToken()
+      );
 
       const result = await AuthService.refreshToken(refreshToken);
 
@@ -186,7 +215,9 @@ describe('AuthService', () => {
         throw new Error('Invalid token');
       });
 
-      await expect(AuthService.refreshToken(refreshToken)).rejects.toThrow('Invalid refresh token');
+      await expect(AuthService.refreshToken(refreshToken)).rejects.toThrow(
+        'Invalid refresh token'
+      );
     });
 
     it('should throw error if token not found in database', async () => {
@@ -194,7 +225,9 @@ describe('AuthService', () => {
 
       mockRefreshTokenRepository.findOne.mockResolvedValue(null);
 
-      await expect(AuthService.refreshToken(refreshToken)).rejects.toThrow('Invalid refresh token');
+      await expect(AuthService.refreshToken(refreshToken)).rejects.toThrow(
+        'Invalid refresh token'
+      );
     });
 
     it('should throw error if token is expired', async () => {
@@ -266,4 +299,3 @@ describe('AuthService', () => {
     });
   });
 });
-

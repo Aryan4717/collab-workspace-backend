@@ -6,7 +6,10 @@ import { UpdateWorkspaceDto } from '../../shared/entities/workspace.entity';
 import { validateUUID } from '../../shared/utils/uuid.util';
 import logger from '../../shared/utils/logger';
 
-export const createWorkspace = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createWorkspace = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -46,13 +49,17 @@ export const createWorkspace = async (req: AuthRequest, res: Response): Promise<
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create workspace',
+      error:
+        error instanceof Error ? error.message : 'Failed to create workspace',
     };
     res.status(400).json(response);
   }
 };
 
-export const getAllWorkspaces = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllWorkspaces = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -77,13 +84,17 @@ export const getAllWorkspaces = async (req: AuthRequest, res: Response): Promise
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch workspaces',
+      error:
+        error instanceof Error ? error.message : 'Failed to fetch workspaces',
     };
     res.status(500).json(response);
   }
 };
 
-export const getWorkspace = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getWorkspace = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -95,7 +106,7 @@ export const getWorkspace = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const { id } = req.params;
-    
+
     // Validate UUID format at controller level before calling service
     try {
       validateUUID(id, 'Workspace');
@@ -123,17 +134,24 @@ export const getWorkspace = async (req: AuthRequest, res: Response): Promise<voi
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch workspace',
+      error:
+        error instanceof Error ? error.message : 'Failed to fetch workspace',
     };
     // Return 404 for "not found" errors (invalid UUID or workspace not found)
-    const statusCode = error instanceof Error && 
-      (error.message === 'Workspace not found' || error.message.includes('not found')) 
-      ? 404 : 500;
+    const statusCode =
+      error instanceof Error &&
+      (error.message === 'Workspace not found' ||
+        error.message.includes('not found'))
+        ? 404
+        : 500;
     res.status(statusCode).json(response);
   }
 };
 
-export const updateWorkspace = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateWorkspace = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -145,7 +163,7 @@ export const updateWorkspace = async (req: AuthRequest, res: Response): Promise<
     }
 
     const { id } = req.params;
-    
+
     // Validate UUID format at controller level before calling service
     try {
       validateUUID(id, 'Workspace');
@@ -164,7 +182,11 @@ export const updateWorkspace = async (req: AuthRequest, res: Response): Promise<
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
 
-    const workspace = await WorkspaceService.update(id, updateData, req.user.userId);
+    const workspace = await WorkspaceService.update(
+      id,
+      updateData,
+      req.user.userId
+    );
 
     const response: ApiResponse = {
       success: true,
@@ -180,14 +202,21 @@ export const updateWorkspace = async (req: AuthRequest, res: Response): Promise<
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update workspace',
+      error:
+        error instanceof Error ? error.message : 'Failed to update workspace',
     };
-    const statusCode = error instanceof Error && error.message === 'Workspace not found' ? 404 : 400;
+    const statusCode =
+      error instanceof Error && error.message === 'Workspace not found'
+        ? 404
+        : 400;
     res.status(statusCode).json(response);
   }
 };
 
-export const deleteWorkspace = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteWorkspace = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -199,7 +228,7 @@ export const deleteWorkspace = async (req: AuthRequest, res: Response): Promise<
     }
 
     const { id } = req.params;
-    
+
     // Validate UUID format at controller level before calling service
     try {
       validateUUID(id, 'Workspace');
@@ -227,10 +256,13 @@ export const deleteWorkspace = async (req: AuthRequest, res: Response): Promise<
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete workspace',
+      error:
+        error instanceof Error ? error.message : 'Failed to delete workspace',
     };
-    const statusCode = error instanceof Error && error.message === 'Workspace not found' ? 404 : 500;
+    const statusCode =
+      error instanceof Error && error.message === 'Workspace not found'
+        ? 404
+        : 500;
     res.status(statusCode).json(response);
   }
 };
-

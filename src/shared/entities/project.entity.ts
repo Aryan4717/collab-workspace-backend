@@ -26,7 +26,7 @@ export class Project {
   @Column({ type: 'uuid' })
   workspaceId!: string;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.projects, {
+  @ManyToOne(() => Workspace, workspace => workspace.projects, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'workspaceId' })
@@ -69,4 +69,3 @@ export interface ProjectResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-

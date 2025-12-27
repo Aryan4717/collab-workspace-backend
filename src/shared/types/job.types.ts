@@ -32,7 +32,10 @@ export interface QueueJob {
   finishedOn?: number;
 }
 
-export type JobProcessor = (job: { data: JobData; id: string }) => Promise<JobResult>;
+export type JobProcessor = (job: {
+  data: JobData;
+  id: string;
+}) => Promise<JobResult>;
 
 export interface JobHandler {
   type: JobType;
@@ -53,4 +56,3 @@ export interface JobStatusResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-

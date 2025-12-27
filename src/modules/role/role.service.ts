@@ -18,7 +18,12 @@ export class RoleService {
     newRole: WorkspaceRole,
     requestedBy: string
   ): Promise<WorkspaceMember> {
-    logger.info('Updating member role', { workspaceId, memberId, newRole, requestedBy });
+    logger.info('Updating member role', {
+      workspaceId,
+      memberId,
+      newRole,
+      requestedBy,
+    });
 
     // Verify requester has permission (only owner can update roles)
     const requesterMember = await this.memberRepository.findOne({
@@ -41,20 +46,31 @@ export class RoleService {
     });
 
     if (!member) {
-      logger.warn('Role update failed: Member not found', { workspaceId, memberId });
+      logger.warn('Role update failed: Member not found', {
+        workspaceId,
+        memberId,
+      });
       throw new Error('Member not found');
     }
 
     // Prevent changing owner role
     if (member.role === WorkspaceRole.OWNER) {
-      logger.warn('Role update failed: Cannot change owner role', { workspaceId, memberId });
+      logger.warn('Role update failed: Cannot change owner role', {
+        workspaceId,
+        memberId,
+      });
       throw new Error('Cannot change the role of the workspace owner');
     }
 
     // Prevent changing to owner (only one owner allowed)
     if (newRole === WorkspaceRole.OWNER) {
-      logger.warn('Role update failed: Cannot assign owner role', { workspaceId, memberId });
-      throw new Error('Cannot assign owner role. Workspace can only have one owner.');
+      logger.warn('Role update failed: Cannot assign owner role', {
+        workspaceId,
+        memberId,
+      });
+      throw new Error(
+        'Cannot assign owner role. Workspace can only have one owner.'
+      );
     }
 
     member.role = newRole;
@@ -67,8 +83,12 @@ export class RoleService {
 
     // Invalidate cache for this member's role and permissions
     await Promise.all([
-      CacheService.delete(CacheService.memberRoleKey(workspaceId, member.userId)),
-      CacheService.invalidatePattern(CacheService.permissionKey(workspaceId, member.userId, '*')),
+      CacheService.delete(
+        CacheService.memberRoleKey(workspaceId, member.userId)
+      ),
+      CacheService.invalidatePattern(
+        CacheService.permissionKey(workspaceId, member.userId, '*')
+      ),
     ]);
 
     return updatedMember;
@@ -79,7 +99,11 @@ export class RoleService {
     memberId: string,
     requestedBy: string
   ): Promise<void> {
-    logger.info('Removing member from workspace', { workspaceId, memberId, requestedBy });
+    logger.info('Removing member from workspace', {
+      workspaceId,
+      memberId,
+      requestedBy,
+    });
 
     // Verify requester has permission (only owner can remove members)
     const requesterMember = await this.memberRepository.findOne({
@@ -101,13 +125,19 @@ export class RoleService {
     });
 
     if (!member) {
-      logger.warn('Member removal failed: Member not found', { workspaceId, memberId });
+      logger.warn('Member removal failed: Member not found', {
+        workspaceId,
+        memberId,
+      });
       throw new Error('Member not found');
     }
 
     // Prevent removing owner
     if (member.role === WorkspaceRole.OWNER) {
-      logger.warn('Member removal failed: Cannot remove owner', { workspaceId, memberId });
+      logger.warn('Member removal failed: Cannot remove owner', {
+        workspaceId,
+        memberId,
+      });
       throw new Error('Cannot remove the workspace owner');
     }
 
@@ -116,8 +146,12 @@ export class RoleService {
 
     // Invalidate cache for this member
     await Promise.all([
-      CacheService.delete(CacheService.memberRoleKey(workspaceId, member.userId)),
-      CacheService.invalidatePattern(CacheService.permissionKey(workspaceId, member.userId, '*')),
+      CacheService.delete(
+        CacheService.memberRoleKey(workspaceId, member.userId)
+      ),
+      CacheService.invalidatePattern(
+        CacheService.permissionKey(workspaceId, member.userId, '*')
+      ),
     ]);
   }
 
@@ -133,7 +167,10 @@ export class RoleService {
     });
 
     if (!member) {
-      logger.warn('Failed to fetch members: Not a member', { workspaceId, userId });
+      logger.warn('Failed to fetch members: Not a member', {
+        workspaceId,
+        userId,
+      });
       throw new Error('Access denied');
     }
 
@@ -186,7 +223,11 @@ export class RoleService {
     permission: keyof RolePermissions
   ): Promise<boolean> {
     // Try to get from cache
-    const cacheKey = CacheService.permissionKey(workspaceId, userId, permission);
+    const cacheKey = CacheService.permissionKey(
+      workspaceId,
+      userId,
+      permission
+    );
     const cached = await CacheService.get<boolean>(cacheKey);
     if (cached !== null) {
       logger.debug('Permission check retrieved from cache', {
@@ -213,4 +254,3 @@ export class RoleService {
     return hasPermission;
   }
 }
-

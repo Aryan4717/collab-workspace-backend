@@ -44,7 +44,10 @@ export class CacheService {
     try {
       await this.redis.del(key);
     } catch (error) {
-      logger.error('Cache delete error', { key, error: (error as Error).message });
+      logger.error('Cache delete error', {
+        key,
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -82,7 +85,10 @@ export class CacheService {
   /**
    * Invalidate all cache entries for a project
    */
-  static async invalidateProject(projectId: string, workspaceId: string): Promise<void> {
+  static async invalidateProject(
+    projectId: string,
+    workspaceId: string
+  ): Promise<void> {
     await Promise.all([
       this.delete(`project:${projectId}`),
       this.invalidatePattern(`project:workspace:${workspaceId}:*`),
@@ -137,8 +143,11 @@ export class CacheService {
   /**
    * Generate cache key for permission check
    */
-  static permissionKey(workspaceId: string, userId: string, permission: string): string {
+  static permissionKey(
+    workspaceId: string,
+    userId: string,
+    permission: string
+  ): string {
     return `permission:${workspaceId}:${userId}:${permission}`;
   }
 }
-

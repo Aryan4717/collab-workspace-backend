@@ -35,4 +35,3 @@ export const ROLE_PERMISSIONS: Record<WorkspaceRole, RolePermissions> = {
     canManageRoles: false,
   },
 };
-

@@ -24,7 +24,7 @@ describe('WorkspaceService', () => {
     mockWorkspaceRepository = createMockRepository<Workspace>();
     mockUserRepository = createMockRepository<User>();
 
-    (AppDataSource.getRepository as jest.Mock) = jest.fn((entity) => {
+    (AppDataSource.getRepository as jest.Mock) = jest.fn(entity => {
       if (entity === Workspace) return mockWorkspaceRepository;
       if (entity === User) return mockUserRepository;
       return createMockRepository();
@@ -61,9 +61,10 @@ describe('WorkspaceService', () => {
       mockWorkspaceRepository.save.mockResolvedValue(mockWorkspace);
 
       // Mock WorkspaceMember creation
-      const { WorkspaceMember } = await import('../../../shared/entities/workspace-member.entity');
+      const { WorkspaceMember } =
+        await import('../../../shared/entities/workspace-member.entity');
       const mockMemberRepository = createMockRepository();
-      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+      (AppDataSource.getRepository as jest.Mock).mockImplementation(entity => {
         if (entity === WorkspaceMember) return mockMemberRepository;
         if (entity === Workspace) return mockWorkspaceRepository;
         if (entity === User) return mockUserRepository;
@@ -76,7 +77,9 @@ describe('WorkspaceService', () => {
 
       expect(result).toBeDefined();
       expect(result.name).toBe(workspaceData.name);
-      expect(mockUserRepository.findOne).toHaveBeenCalledWith({ where: { id: ownerId } });
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: { id: ownerId },
+      });
       expect(mockWorkspaceRepository.save).toHaveBeenCalled();
     });
 
@@ -86,23 +89,26 @@ describe('WorkspaceService', () => {
 
       mockUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(WorkspaceService.create(workspaceData, ownerId)).rejects.toThrow(
-        'Owner not found'
-      );
+      await expect(
+        WorkspaceService.create(workspaceData, ownerId)
+      ).rejects.toThrow('Owner not found');
     });
 
     it('should throw error if workspace name already exists', async () => {
       const workspaceData = { name: 'Existing Workspace' };
       const ownerId = 'user-123';
       const mockOwner = createMockUser({ id: ownerId });
-      const existingWorkspace = createMockWorkspace({ name: workspaceData.name, ownerId });
+      const existingWorkspace = createMockWorkspace({
+        name: workspaceData.name,
+        ownerId,
+      });
 
       mockUserRepository.findOne.mockResolvedValue(mockOwner);
       mockWorkspaceRepository.findOne.mockResolvedValue(existingWorkspace);
 
-      await expect(WorkspaceService.create(workspaceData, ownerId)).rejects.toThrow(
-        'Workspace with this name already exists'
-      );
+      await expect(
+        WorkspaceService.create(workspaceData, ownerId)
+      ).rejects.toThrow('Workspace with this name already exists');
     });
   });
 
@@ -128,7 +134,10 @@ describe('WorkspaceService', () => {
     it('should fetch from database if not cached', async () => {
       const workspaceId = 'workspace-123';
       const userId = 'user-123';
-      const mockWorkspace = createMockWorkspace({ id: workspaceId, ownerId: userId });
+      const mockWorkspace = createMockWorkspace({
+        id: workspaceId,
+        ownerId: userId,
+      });
 
       (CacheService.get as jest.Mock).mockResolvedValue(null);
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
@@ -149,23 +158,26 @@ describe('WorkspaceService', () => {
       (CacheService.get as jest.Mock).mockResolvedValue(null);
       mockWorkspaceRepository.findOne.mockResolvedValue(null);
 
-      await expect(WorkspaceService.findOne(workspaceId, userId)).rejects.toThrow(
-        'Workspace not found'
-      );
+      await expect(
+        WorkspaceService.findOne(workspaceId, userId)
+      ).rejects.toThrow('Workspace not found');
     });
 
     it('should throw error if user has no access', async () => {
       const workspaceId = 'workspace-123';
       const userId = 'unauthorized-user';
-      const mockWorkspace = createMockWorkspace({ id: workspaceId, ownerId: 'other-user' });
+      const mockWorkspace = createMockWorkspace({
+        id: workspaceId,
+        ownerId: 'other-user',
+      });
 
       (CacheService.get as jest.Mock).mockResolvedValue(null);
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
       (RoleService.getMemberRole as jest.Mock).mockResolvedValue(null);
 
-      await expect(WorkspaceService.findOne(workspaceId, userId)).rejects.toThrow(
-        'Access denied'
-      );
+      await expect(
+        WorkspaceService.findOne(workspaceId, userId)
+      ).rejects.toThrow('Access denied');
     });
   });
 
@@ -174,7 +186,10 @@ describe('WorkspaceService', () => {
       const workspaceId = 'workspace-123';
       const userId = 'user-123';
       const updateData = { description: 'Updated Description' };
-      const mockWorkspace = createMockWorkspace({ id: workspaceId, ownerId: userId });
+      const mockWorkspace = createMockWorkspace({
+        id: workspaceId,
+        ownerId: userId,
+      });
 
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
       (RoleService.hasPermission as jest.Mock).mockResolvedValue(true);
@@ -183,11 +198,17 @@ describe('WorkspaceService', () => {
         ...updateData,
       });
 
-      const result = await WorkspaceService.update(workspaceId, updateData, userId);
+      const result = await WorkspaceService.update(
+        workspaceId,
+        updateData,
+        userId
+      );
 
       expect(result).toBeDefined();
       expect(mockWorkspaceRepository.save).toHaveBeenCalled();
-      expect(CacheService.invalidateWorkspace).toHaveBeenCalledWith(workspaceId);
+      expect(CacheService.invalidateWorkspace).toHaveBeenCalledWith(
+        workspaceId
+      );
     });
 
     it('should throw error if user lacks permission', async () => {
@@ -199,9 +220,9 @@ describe('WorkspaceService', () => {
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
       (RoleService.hasPermission as jest.Mock).mockResolvedValue(false);
 
-      await expect(WorkspaceService.update(workspaceId, updateData, userId)).rejects.toThrow(
-        'Access denied'
-      );
+      await expect(
+        WorkspaceService.update(workspaceId, updateData, userId)
+      ).rejects.toThrow('Access denied');
     });
   });
 
@@ -209,7 +230,10 @@ describe('WorkspaceService', () => {
     it('should delete workspace successfully', async () => {
       const workspaceId = 'workspace-123';
       const userId = 'user-123';
-      const mockWorkspace = createMockWorkspace({ id: workspaceId, ownerId: userId });
+      const mockWorkspace = createMockWorkspace({
+        id: workspaceId,
+        ownerId: userId,
+      });
 
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
       mockWorkspaceRepository.remove.mockResolvedValue(mockWorkspace);
@@ -217,20 +241,24 @@ describe('WorkspaceService', () => {
       await WorkspaceService.delete(workspaceId, userId);
 
       expect(mockWorkspaceRepository.remove).toHaveBeenCalled();
-      expect(CacheService.invalidateWorkspace).toHaveBeenCalledWith(workspaceId);
+      expect(CacheService.invalidateWorkspace).toHaveBeenCalledWith(
+        workspaceId
+      );
     });
 
     it('should throw error if user is not owner', async () => {
       const workspaceId = 'workspace-123';
       const userId = 'non-owner';
-      const mockWorkspace = createMockWorkspace({ id: workspaceId, ownerId: 'other-user' });
+      const mockWorkspace = createMockWorkspace({
+        id: workspaceId,
+        ownerId: 'other-user',
+      });
 
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
 
-      await expect(WorkspaceService.delete(workspaceId, userId)).rejects.toThrow(
-        'Only workspace owner can delete the workspace'
-      );
+      await expect(
+        WorkspaceService.delete(workspaceId, userId)
+      ).rejects.toThrow('Only workspace owner can delete the workspace');
     });
   });
 });
-

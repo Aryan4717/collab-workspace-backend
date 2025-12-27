@@ -1,6 +1,9 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
-import { AuthenticatedSocket, socketAuthMiddleware } from '../../shared/middleware/socketAuth.middleware';
+import {
+  AuthenticatedSocket,
+  socketAuthMiddleware,
+} from '../../shared/middleware/socketAuth.middleware';
 import { getRedisSubscriber, getRedisPublisher } from '../../config/redis';
 import logger from '../../shared/utils/logger';
 
@@ -59,7 +62,7 @@ class SocketService {
       this.redisPublisher = getRedisPublisher();
 
       // Subscribe to workspace events
-      this.redisSubscriber.subscribe('workspace:events', (err) => {
+      this.redisSubscriber.subscribe('workspace:events', err => {
         if (err) {
           logger.error('Redis subscription error', { error: err.message });
         } else {
@@ -87,7 +90,11 @@ class SocketService {
     }
   }
 
-  private handleRedisEvent(event: { type: string; workspaceId: string; data: unknown }): void {
+  private handleRedisEvent(event: {
+    type: string;
+    workspaceId: string;
+    data: unknown;
+  }): void {
     if (!this.io) return;
 
     const { type, workspaceId, data } = event;
@@ -124,7 +131,10 @@ class SocketService {
     });
   }
 
-  private handleWorkspaceJoin(socket: AuthenticatedSocket, workspaceId: string): void {
+  private handleWorkspaceJoin(
+    socket: AuthenticatedSocket,
+    workspaceId: string
+  ): void {
     if (!socket.userId || !socket.userEmail) {
       logger.warn('Workspace join failed: User not authenticated', {
         socketId: socket.id,
@@ -183,7 +193,7 @@ class SocketService {
     }
 
     // Send current users list to the newly joined user
-    const currentUsers = Array.from(roomUsersMap.values()).map((u) => ({
+    const currentUsers = Array.from(roomUsersMap.values()).map(u => ({
       userId: u.userId,
       email: u.email,
       joinedAt: u.joinedAt,
@@ -195,7 +205,10 @@ class SocketService {
     });
   }
 
-  private handleWorkspaceLeave(socket: AuthenticatedSocket, workspaceId: string): void {
+  private handleWorkspaceLeave(
+    socket: AuthenticatedSocket,
+    workspaceId: string
+  ): void {
     if (!socket.userId) {
       return;
     }
@@ -248,7 +261,10 @@ class SocketService {
     }
   }
 
-  private handleFileChange(socket: AuthenticatedSocket, data: FileChangeEvent): void {
+  private handleFileChange(
+    socket: AuthenticatedSocket,
+    data: FileChangeEvent
+  ): void {
     if (!socket.userId || !socket.userEmail) {
       logger.warn('File change event rejected: User not authenticated', {
         socketId: socket.id,
@@ -326,4 +342,3 @@ class SocketService {
 }
 
 export const socketService = new SocketService();
-

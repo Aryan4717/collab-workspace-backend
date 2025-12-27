@@ -1,12 +1,17 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../config/database';
-import { User, CreateUserDto, UserResponse } from '../../shared/entities/user.entity';
+import {
+  User,
+  CreateUserDto,
+  UserResponse,
+} from '../../shared/entities/user.entity';
 import { RefreshToken } from '../../shared/entities/refresh-token.entity';
 import { JwtUtil, TokenPair } from '../../shared/utils/jwt.util';
 import logger from '../../shared/utils/logger';
 
 export class AuthService {
-  private static userRepository: Repository<User> = AppDataSource.getRepository(User);
+  private static userRepository: Repository<User> =
+    AppDataSource.getRepository(User);
   private static refreshTokenRepository: Repository<RefreshToken> =
     AppDataSource.getRepository(RefreshToken);
 
@@ -21,7 +26,9 @@ export class AuthService {
       where: { email: userData.email },
     });
     if (existingUser) {
-      logger.warn('Registration failed: User already exists', { email: userData.email });
+      logger.warn('Registration failed: User already exists', {
+        email: userData.email,
+      });
       throw new Error('User with this email already exists');
     }
 
@@ -42,15 +49,21 @@ export class AuthService {
       // Handle database constraint violations (e.g., unique constraint on email)
       // This can happen if cleanup didn't work or in race conditions
       if (error instanceof Error && error.message.includes('duplicate key')) {
-        logger.warn('Registration failed: User already exists (database constraint)', {
-          email: userData.email,
-        });
+        logger.warn(
+          'Registration failed: User already exists (database constraint)',
+          {
+            email: userData.email,
+          }
+        );
         throw new Error('User with this email already exists');
       }
       // Re-throw other errors
       throw error;
     }
-    logger.info('User created successfully', { userId: savedUser.id, email: savedUser.email });
+    logger.info('User created successfully', {
+      userId: savedUser.id,
+      email: savedUser.email,
+    });
 
     // Generate tokens
     const tokens = JwtUtil.generateTokenPair({
@@ -80,7 +93,10 @@ export class AuthService {
     };
   }
 
-  static async login(email: string, password: string): Promise<{
+  static async login(
+    email: string,
+    password: string
+  ): Promise<{
     user: UserResponse;
     tokens: TokenPair;
   }> {
@@ -123,9 +139,12 @@ export class AuthService {
     } catch (error) {
       // If duplicate key error, clean up old tokens and retry
       if (error instanceof Error && error.message.includes('duplicate key')) {
-        logger.warn('Duplicate refresh token detected during login, cleaning up old tokens', {
-          userId: user.id,
-        });
+        logger.warn(
+          'Duplicate refresh token detected during login, cleaning up old tokens',
+          {
+            userId: user.id,
+          }
+        );
         // Delete all existing refresh tokens for this user
         await this.refreshTokenRepository.delete({ userId: user.id });
         // Retry saving the new token

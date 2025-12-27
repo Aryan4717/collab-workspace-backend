@@ -5,7 +5,10 @@ import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { WorkspaceRole } from '../../shared/types/roles';
 import logger from '../../shared/utils/logger';
 
-export const updateMemberRole = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateMemberRole = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -61,12 +64,18 @@ export const updateMemberRole = async (req: AuthRequest, res: Response): Promise
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update role',
     };
-    const statusCode = error instanceof Error && error.message.includes('Access denied') ? 403 : 400;
+    const statusCode =
+      error instanceof Error && error.message.includes('Access denied')
+        ? 403
+        : 400;
     res.status(statusCode).json(response);
   }
 };
 
-export const removeMember = async (req: AuthRequest, res: Response): Promise<void> => {
+export const removeMember = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -96,12 +105,18 @@ export const removeMember = async (req: AuthRequest, res: Response): Promise<voi
       success: false,
       error: error instanceof Error ? error.message : 'Failed to remove member',
     };
-    const statusCode = error instanceof Error && error.message.includes('Access denied') ? 403 : 400;
+    const statusCode =
+      error instanceof Error && error.message.includes('Access denied')
+        ? 403
+        : 400;
     res.status(statusCode).json(response);
   }
 };
 
-export const getWorkspaceMembers = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getWorkspaceMembers = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -113,11 +128,14 @@ export const getWorkspaceMembers = async (req: AuthRequest, res: Response): Prom
     }
 
     const { workspaceId } = req.params;
-    const members = await RoleService.getWorkspaceMembers(workspaceId, req.user.userId);
+    const members = await RoleService.getWorkspaceMembers(
+      workspaceId,
+      req.user.userId
+    );
 
     const response: ApiResponse = {
       success: true,
-      data: members.map((member) => member.toResponse()),
+      data: members.map(member => member.toResponse()),
     };
     res.status(200).json(response);
   } catch (error) {
@@ -133,4 +151,3 @@ export const getWorkspaceMembers = async (req: AuthRequest, res: Response): Prom
     res.status(403).json(response);
   }
 };
-

@@ -17,7 +17,9 @@ export const createMockUser = (overrides?: Partial<User>): User => {
   return user;
 };
 
-export const createMockWorkspace = (overrides?: Partial<Workspace>): Workspace => {
+export const createMockWorkspace = (
+  overrides?: Partial<Workspace>
+): Workspace => {
   const workspace = new Workspace();
   workspace.id = overrides?.id || 'workspace-123';
   workspace.name = overrides?.name || 'Test Workspace';
@@ -69,7 +71,9 @@ export const createMockWorkspaceMember = (
   return member;
 };
 
-export const createMockRepository = <T extends ObjectLiteral>(): jest.Mocked<Repository<T>> => {
+export const createMockRepository = <T extends ObjectLiteral>(): jest.Mocked<
+  Repository<T>
+> => {
   return {
     findOne: jest.fn(),
     find: jest.fn(),
@@ -82,13 +86,15 @@ export const createMockRepository = <T extends ObjectLiteral>(): jest.Mocked<Rep
   } as unknown as jest.Mocked<Repository<T>>;
 };
 
-export const createMockRefreshToken = (overrides?: Partial<RefreshToken>): RefreshToken => {
+export const createMockRefreshToken = (
+  overrides?: Partial<RefreshToken>
+): RefreshToken => {
   const token = new RefreshToken();
   token.id = overrides?.id || 'token-123';
   token.token = overrides?.token || 'refresh-token-123';
   token.userId = overrides?.userId || 'user-123';
-  token.expiresAt = overrides?.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  token.expiresAt =
+    overrides?.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   token.createdAt = overrides?.createdAt || new Date();
   return token;
 };
-

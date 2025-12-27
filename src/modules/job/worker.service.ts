@@ -13,14 +13,15 @@ class WorkerService {
   private workers: Map<JobType, Worker> = new Map();
   private jobService = new JobService();
 
-  private jobProcessors: Map<JobType, (data: JobData) => Promise<JobResult>> = new Map();
+  private jobProcessors: Map<JobType, (data: JobData) => Promise<JobResult>> =
+    new Map();
 
   initialize(): void {
     // Register job processors
     this.registerProcessors();
 
     // Create workers for each job type
-    Object.values(JobType).forEach((jobType) => {
+    Object.values(JobType).forEach(jobType => {
       this.createWorker(jobType);
     });
 
@@ -33,10 +34,10 @@ class WorkerService {
     // Email send processor
     this.jobProcessors.set(JobType.EMAIL_SEND, async (data: JobData) => {
       logger.info('Processing email:send job', { data });
-      
+
       // Simulate email sending
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       // Mock implementation - replace with actual email service
       if (data.shouldFail) {
         throw new Error('Email service unavailable');
@@ -52,10 +53,10 @@ class WorkerService {
     // File process processor
     this.jobProcessors.set(JobType.FILE_PROCESS, async (data: JobData) => {
       logger.info('Processing file:process job', { data });
-      
+
       // Simulate file processing
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
       if (data.shouldFail) {
         throw new Error('File processing failed');
       }
@@ -71,10 +72,10 @@ class WorkerService {
     // Data export processor
     this.jobProcessors.set(JobType.DATA_EXPORT, async (data: JobData) => {
       logger.info('Processing data:export job', { data });
-      
+
       // Simulate data export
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
       if (data.shouldFail) {
         throw new Error('Export failed');
       }
@@ -90,10 +91,10 @@ class WorkerService {
     // Notification send processor
     this.jobProcessors.set(JobType.NOTIFICATION_SEND, async (data: JobData) => {
       logger.info('Processing notification:send job', { data });
-      
+
       // Simulate notification sending
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       if (data.shouldFail) {
         throw new Error('Notification service error');
       }
@@ -109,10 +110,10 @@ class WorkerService {
     // Workspace backup processor
     this.jobProcessors.set(JobType.WORKSPACE_BACKUP, async (data: JobData) => {
       logger.info('Processing workspace:backup job', { data });
-      
+
       // Simulate workspace backup
-      await new Promise((resolve) => setTimeout(resolve, 10000));
-      
+      await new Promise(resolve => setTimeout(resolve, 10000));
+
       if (data.shouldFail) {
         throw new Error('Backup failed');
       }
@@ -164,7 +165,11 @@ class WorkerService {
       const dbJobId = (job.data as any)?._dbJobId || job.id;
 
       // Update job status in database
-      await this.jobService.updateJobStatus(dbJobId, JobStatus.COMPLETED, result);
+      await this.jobService.updateJobStatus(
+        dbJobId,
+        JobStatus.COMPLETED,
+        result
+      );
     });
 
     worker.on('failed', async (job: BullJob | undefined, error: Error) => {
@@ -216,7 +221,10 @@ class WorkerService {
     logger.info('Worker created', { jobType });
   }
 
-  private async processJob(jobType: JobType, job: BullJob<JobData>): Promise<JobResult> {
+  private async processJob(
+    jobType: JobType,
+    job: BullJob<JobData>
+  ): Promise<JobResult> {
     const processor = this.jobProcessors.get(jobType);
 
     if (!processor) {
@@ -262,7 +270,9 @@ class WorkerService {
   }
 
   async closeAll(): Promise<void> {
-    const closePromises = Array.from(this.workers.values()).map((worker) => worker.close());
+    const closePromises = Array.from(this.workers.values()).map(worker =>
+      worker.close()
+    );
     await Promise.all(closePromises);
     this.workers.clear();
     logger.info('All workers closed');
@@ -274,4 +284,3 @@ class WorkerService {
 }
 
 export const workerService = new WorkerService();
-

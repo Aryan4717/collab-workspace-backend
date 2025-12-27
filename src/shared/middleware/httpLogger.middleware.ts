@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 
-export const httpLogger = (req: Request, res: Response, next: NextFunction): void => {
+export const httpLogger = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const startTime = Date.now();
 
   // Log request
@@ -35,4 +39,3 @@ export const httpLogger = (req: Request, res: Response, next: NextFunction): voi
 
   next();
 };
-

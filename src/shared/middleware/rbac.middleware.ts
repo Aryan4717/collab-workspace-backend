@@ -4,10 +4,12 @@ import { ApiResponse } from '../types';
 import { RoleService } from '../../modules/role/role.service';
 import { RolePermissions } from '../types/roles';
 
-export const requireWorkspaceAccess = (
-  permission: keyof RolePermissions
-) => {
-  return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const requireWorkspaceAccess = (permission: keyof RolePermissions) => {
+  return async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       if (!req.user) {
         const response: ApiResponse = {
@@ -18,7 +20,8 @@ export const requireWorkspaceAccess = (
         return;
       }
 
-      const workspaceId = req.params.workspaceId || req.params.id || req.body.workspaceId;
+      const workspaceId =
+        req.params.workspaceId || req.params.id || req.body.workspaceId;
 
       if (!workspaceId) {
         const response: ApiResponse = {
@@ -56,7 +59,11 @@ export const requireWorkspaceAccess = (
 };
 
 export const requireWorkspaceRole = (allowedRoles: string[]) => {
-  return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  return async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       if (!req.user) {
         const response: ApiResponse = {
@@ -67,7 +74,8 @@ export const requireWorkspaceRole = (allowedRoles: string[]) => {
         return;
       }
 
-      const workspaceId = req.params.workspaceId || req.params.id || req.body.workspaceId;
+      const workspaceId =
+        req.params.workspaceId || req.params.id || req.body.workspaceId;
 
       if (!workspaceId) {
         const response: ApiResponse = {
@@ -78,7 +86,10 @@ export const requireWorkspaceRole = (allowedRoles: string[]) => {
         return;
       }
 
-      const role = await RoleService.getMemberRole(workspaceId, req.user.userId);
+      const role = await RoleService.getMemberRole(
+        workspaceId,
+        req.user.userId
+      );
 
       if (!role || !allowedRoles.includes(role)) {
         const response: ApiResponse = {
@@ -99,4 +110,3 @@ export const requireWorkspaceRole = (allowedRoles: string[]) => {
     }
   };
 };
-

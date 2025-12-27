@@ -185,4 +185,3 @@ router.post('/invites/accept', acceptInvite);
 router.post('/invites/decline', declineInvite);
 
 export default router;
-

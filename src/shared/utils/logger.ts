@@ -33,14 +33,14 @@ const level = () => {
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => {
+  winston.format.printf(info => {
     const { timestamp, level, message, ...meta } = info;
     let metaString = '';
-    
+
     if (Object.keys(meta).length > 0 && meta.constructor === Object) {
       metaString = '\n' + JSON.stringify(meta, null, 2);
     }
-    
+
     return `${timestamp} [${level}]: ${message}${metaString}`;
   })
 );
@@ -93,4 +93,3 @@ export const stream = {
 };
 
 export default logger;
-

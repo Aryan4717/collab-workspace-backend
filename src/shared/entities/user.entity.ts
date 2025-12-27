@@ -42,6 +42,7 @@ export class User {
   }
 
   toResponse() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userResponse } = this;
     return userResponse;
   }

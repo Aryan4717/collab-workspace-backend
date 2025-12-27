@@ -61,7 +61,9 @@ export class ProjectService {
         name: projectData.name,
         workspaceId: projectData.workspaceId,
       });
-      throw new Error('Project with this name already exists in this workspace');
+      throw new Error(
+        'Project with this name already exists in this workspace'
+      );
     }
 
     const project = this.projectRepository.create({
@@ -77,13 +79,22 @@ export class ProjectService {
     });
 
     // Invalidate cache
-    await CacheService.invalidateProject(savedProject.id, savedProject.workspaceId);
+    await CacheService.invalidateProject(
+      savedProject.id,
+      savedProject.workspaceId
+    );
 
     return savedProject.toResponse();
   }
 
-  static async findAll(workspaceId: string, userId: string): Promise<ProjectResponse[]> {
-    logger.debug('Fetching all projects for workspace', { workspaceId, userId });
+  static async findAll(
+    workspaceId: string,
+    userId: string
+  ): Promise<ProjectResponse[]> {
+    logger.debug('Fetching all projects for workspace', {
+      workspaceId,
+      userId,
+    });
 
     // Try to get from cache
     const cacheKey = CacheService.projectListKey(workspaceId);
@@ -91,7 +102,11 @@ export class ProjectService {
     if (cached) {
       logger.debug('Project list retrieved from cache', { workspaceId });
       // Still need to check permissions
-      const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
+      const canView = await RoleService.hasPermission(
+        workspaceId,
+        userId,
+        'canView'
+      );
       if (!canView) {
         logger.warn('Project fetch failed: Access denied', {
           workspaceId,
@@ -130,7 +145,7 @@ export class ProjectService {
       order: { createdAt: 'DESC' },
     });
 
-    const result = projects.map((project) => project.toResponse());
+    const result = projects.map(project => project.toResponse());
 
     // Cache the result (5 minutes TTL for lists)
     await CacheService.set(cacheKey, result, 300);
@@ -151,7 +166,11 @@ export class ProjectService {
     if (cached) {
       logger.debug('Project retrieved from cache', { projectId: id });
       // Still need to check permissions
-      const canView = await RoleService.hasPermission(workspaceId, userId, 'canView');
+      const canView = await RoleService.hasPermission(
+        workspaceId,
+        userId,
+        'canView'
+      );
       if (!canView) {
         logger.warn('Project fetch failed: Access denied', {
           workspaceId,
@@ -222,7 +241,11 @@ export class ProjectService {
     }
 
     // Check if user has edit permission
-    const canEdit = await RoleService.hasPermission(workspaceId, userId, 'canEdit');
+    const canEdit = await RoleService.hasPermission(
+      workspaceId,
+      userId,
+      'canEdit'
+    );
     if (!canEdit) {
       logger.warn('Project update failed: Access denied', {
         workspaceId,
@@ -253,7 +276,9 @@ export class ProjectService {
           projectId: id,
           name: updateData.name,
         });
-        throw new Error('Project with this name already exists in this workspace');
+        throw new Error(
+          'Project with this name already exists in this workspace'
+        );
       }
     }
 
@@ -290,7 +315,11 @@ export class ProjectService {
     }
 
     // Check if user has delete permission
-    const canDelete = await RoleService.hasPermission(workspaceId, userId, 'canDelete');
+    const canDelete = await RoleService.hasPermission(
+      workspaceId,
+      userId,
+      'canDelete'
+    );
     if (!canDelete) {
       logger.warn('Project deletion failed: Access denied', {
         workspaceId,
@@ -318,4 +347,3 @@ export class ProjectService {
     await CacheService.invalidateProject(id, workspaceId);
   }
 }
-

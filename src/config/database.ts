@@ -15,7 +15,15 @@ export const dataSourceOptions: DataSourceOptions = {
   username: env.dbUsername,
   password: env.dbPassword,
   database: env.dbName,
-  entities: [User, RefreshToken, Workspace, Project, WorkspaceMember, WorkspaceInvite, Job],
+  entities: [
+    User,
+    RefreshToken,
+    Workspace,
+    Project,
+    WorkspaceMember,
+    WorkspaceInvite,
+    Job,
+  ],
   synchronize: env.nodeEnv !== 'production', // Auto-sync in dev and test (test !== production)
   logging: false, // Disable SQL query logging
   migrations: ['dist/migrations/*.js'],
@@ -23,4 +31,3 @@ export const dataSourceOptions: DataSourceOptions = {
 };
 
 export const AppDataSource = new DataSource(dataSourceOptions);
-

@@ -25,8 +25,11 @@ const startServer = async (): Promise<void> => {
     // Initialize WebSocket server
     socketService.initialize(httpServer);
 
-    // Initialize worker service for async job processing
-    workerService.initialize();
+    // Note: Worker service is now run in a separate container/process
+    // Only initialize worker if WORKER_ENABLED env var is set (for backward compatibility)
+    if (process.env.WORKER_ENABLED === 'true') {
+      workerService.initialize();
+    }
 
     // Start server
     httpServer.listen(env.port, () => {
@@ -42,27 +45,29 @@ const startServer = async (): Promise<void> => {
     // Graceful shutdown
     const gracefulShutdown = async (signal: string) => {
       logger.warn(`${signal} signal received: closing server`);
-      
+
       httpServer.close(async () => {
         // Close WebSocket server
         socketService.close();
-        
-        // Close worker service
-        await workerService.closeAll();
-        
+
+        // Close worker service (only if it was initialized)
+        if (process.env.WORKER_ENABLED === 'true') {
+          await workerService.closeAll();
+          logger.info('Worker service closed');
+        }
+
         // Close queue manager
         await queueManager.closeAll();
-        
+
         // Close Redis connections
         await closeRedisConnections();
-        
+
         // Close database connection
         await AppDataSource.destroy();
-        
+
         logger.info('Database connection closed');
         logger.info('Redis connections closed');
         logger.info('WebSocket server closed');
-        logger.info('Worker service closed');
         logger.info('Queue manager closed');
         logger.info('HTTP server closed');
         process.exit(0);
@@ -73,12 +78,18 @@ const startServer = async (): Promise<void> => {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
   } catch (error) {
     logger.error('Error starting server', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : String(error),
+      errorName: error instanceof Error ? error.name : typeof error,
       stack: error instanceof Error ? error.stack : undefined,
+      dbConfig: {
+        host: env.dbHost,
+        port: env.dbPort,
+        database: env.dbName,
+        username: env.dbUsername,
+      },
     });
     process.exit(1);
   }
 };
 
 startServer();
-

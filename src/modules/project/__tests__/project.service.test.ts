@@ -24,7 +24,7 @@ describe('ProjectService', () => {
     mockProjectRepository = createMockRepository<Project>();
     mockWorkspaceRepository = createMockRepository<Workspace>();
 
-    (AppDataSource.getRepository as jest.Mock) = jest.fn((entity) => {
+    (AppDataSource.getRepository as jest.Mock) = jest.fn(entity => {
       if (entity === Project) return mockProjectRepository;
       if (entity === Workspace) return mockWorkspaceRepository;
       return createMockRepository();
@@ -52,7 +52,9 @@ describe('ProjectService', () => {
         workspaceId: 'workspace-123',
       };
       const userId = 'user-123';
-      const mockWorkspace = createMockWorkspace({ id: projectData.workspaceId });
+      const mockWorkspace = createMockWorkspace({
+        id: projectData.workspaceId,
+      });
       const mockProject = createMockProject(projectData);
 
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
@@ -89,7 +91,9 @@ describe('ProjectService', () => {
         workspaceId: 'workspace-123',
       };
       const userId = 'unauthorized-user';
-      const mockWorkspace = createMockWorkspace({ id: projectData.workspaceId });
+      const mockWorkspace = createMockWorkspace({
+        id: projectData.workspaceId,
+      });
 
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
       (RoleService.hasPermission as jest.Mock).mockResolvedValue(false);
@@ -105,7 +109,9 @@ describe('ProjectService', () => {
         workspaceId: 'workspace-123',
       };
       const userId = 'user-123';
-      const mockWorkspace = createMockWorkspace({ id: projectData.workspaceId });
+      const mockWorkspace = createMockWorkspace({
+        id: projectData.workspaceId,
+      });
       const existingProject = createMockProject(projectData);
 
       mockWorkspaceRepository.findOne.mockResolvedValue(mockWorkspace);
@@ -132,7 +138,11 @@ describe('ProjectService', () => {
       (CacheService.get as jest.Mock).mockResolvedValue(cachedProject);
       (RoleService.hasPermission as jest.Mock).mockResolvedValue(true);
 
-      const result = await ProjectService.findOne(projectId, workspaceId, userId);
+      const result = await ProjectService.findOne(
+        projectId,
+        workspaceId,
+        userId
+      );
 
       expect(result).toEqual(cachedProject);
       expect(mockProjectRepository.findOne).not.toHaveBeenCalled();
@@ -151,7 +161,11 @@ describe('ProjectService', () => {
       mockProjectRepository.findOne.mockResolvedValue(mockProject);
       (CacheService.set as jest.Mock).mockResolvedValue(undefined);
 
-      const result = await ProjectService.findOne(projectId, workspaceId, userId);
+      const result = await ProjectService.findOne(
+        projectId,
+        workspaceId,
+        userId
+      );
 
       expect(result).toBeDefined();
       expect(mockProjectRepository.findOne).toHaveBeenCalled();
@@ -192,7 +206,12 @@ describe('ProjectService', () => {
         ...updateData,
       });
 
-      const result = await ProjectService.update(projectId, updateData, workspaceId, userId);
+      const result = await ProjectService.update(
+        projectId,
+        updateData,
+        workspaceId,
+        userId
+      );
 
       expect(result).toBeDefined();
       expect(mockProjectRepository.save).toHaveBeenCalled();
@@ -235,4 +254,3 @@ describe('ProjectService', () => {
     });
   });
 });
-

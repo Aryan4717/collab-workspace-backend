@@ -52,6 +52,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - WORKER_ENABLED=false
     depends_on:
       db:
         condition: service_healthy
@@ -64,6 +65,29 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: collab-workspace-worker
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    command: ["npm", "run", "start:worker"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:

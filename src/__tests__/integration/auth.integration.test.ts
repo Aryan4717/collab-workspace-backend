@@ -18,9 +18,15 @@ let dbAvailable = false;
       // Test the connection
       await AppDataSource.query('SELECT 1');
       dbAvailable = true;
-      console.log('✅ Database connected successfully for integration tests, dbAvailable =', dbAvailable);
+      console.log(
+        '✅ Database connected successfully for integration tests, dbAvailable =',
+        dbAvailable
+      );
     } catch (error) {
-      console.warn('❌ Database not available, skipping integration tests', (error as Error).message);
+      console.warn(
+        '❌ Database not available, skipping integration tests',
+        (error as Error).message
+      );
       dbAvailable = false;
     }
   });
@@ -56,7 +62,11 @@ let dbAvailable = false;
   describe('POST /api/v1/auth/register', () => {
     it('should register a new user successfully', async () => {
       if (!dbAvailable) {
-        console.log('Skipping test: Database not available (dbAvailable =', dbAvailable, ')');
+        console.log(
+          'Skipping test: Database not available (dbAvailable =',
+          dbAvailable,
+          ')'
+        );
         return;
       }
       const userData = {
@@ -68,7 +78,7 @@ let dbAvailable = false;
       const response = await request(app)
         .post('/api/v1/auth/register')
         .send(userData);
-      
+
       if (response.status !== 201) {
         console.log('Registration failed:', response.status, response.body);
       }
@@ -95,7 +105,10 @@ let dbAvailable = false;
       };
 
       // Register first time
-      await request(app).post('/api/v1/auth/register').send(userData).expect(201);
+      await request(app)
+        .post('/api/v1/auth/register')
+        .send(userData)
+        .expect(201);
 
       // Try to register again
       const response = await request(app)
@@ -128,7 +141,7 @@ let dbAvailable = false;
 
   describe('POST /api/v1/auth/login', () => {
     let loginEmail: string;
-    
+
     beforeEach(async () => {
       if (!dbAvailable) {
         return;
@@ -314,4 +327,3 @@ let dbAvailable = false;
     });
   });
 });
-

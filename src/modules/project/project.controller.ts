@@ -5,7 +5,10 @@ import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { UpdateProjectDto } from '../../shared/entities/project.entity';
 import logger from '../../shared/utils/logger';
 
-export const createProject = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createProject = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -46,18 +49,23 @@ export const createProject = async (req: AuthRequest, res: Response): Promise<vo
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create project',
+      error:
+        error instanceof Error ? error.message : 'Failed to create project',
     };
     const statusCode =
       error instanceof Error &&
-      (error.message.includes('not found') || error.message.includes('access denied'))
+      (error.message.includes('not found') ||
+        error.message.includes('access denied'))
         ? 404
         : 400;
     res.status(statusCode).json(response);
   }
 };
 
-export const getAllProjects = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllProjects = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -94,18 +102,23 @@ export const getAllProjects = async (req: AuthRequest, res: Response): Promise<v
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch projects',
+      error:
+        error instanceof Error ? error.message : 'Failed to fetch projects',
     };
     const statusCode =
       error instanceof Error &&
-      (error.message.includes('not found') || error.message.includes('access denied'))
+      (error.message.includes('not found') ||
+        error.message.includes('access denied'))
         ? 404
         : 500;
     res.status(statusCode).json(response);
   }
 };
 
-export const getProject = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getProject = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -127,7 +140,11 @@ export const getProject = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const project = await ProjectService.findOne(id, workspaceId, req.user.userId);
+    const project = await ProjectService.findOne(
+      id,
+      workspaceId,
+      req.user.userId
+    );
 
     const response: ApiResponse = {
       success: true,
@@ -156,7 +173,10 @@ export const getProject = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
-export const updateProject = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateProject = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -183,7 +203,12 @@ export const updateProject = async (req: AuthRequest, res: Response): Promise<vo
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
 
-    const project = await ProjectService.update(id, updateData, workspaceId, req.user.userId);
+    const project = await ProjectService.update(
+      id,
+      updateData,
+      workspaceId,
+      req.user.userId
+    );
 
     const response: ApiResponse = {
       success: true,
@@ -200,7 +225,8 @@ export const updateProject = async (req: AuthRequest, res: Response): Promise<vo
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update project',
+      error:
+        error instanceof Error ? error.message : 'Failed to update project',
     };
     const statusCode =
       error instanceof Error &&
@@ -213,7 +239,10 @@ export const updateProject = async (req: AuthRequest, res: Response): Promise<vo
   }
 };
 
-export const deleteProject = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteProject = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
       const response: ApiResponse = {
@@ -251,7 +280,8 @@ export const deleteProject = async (req: AuthRequest, res: Response): Promise<vo
     });
     const response: ApiResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete project',
+      error:
+        error instanceof Error ? error.message : 'Failed to delete project',
     };
     const statusCode =
       error instanceof Error &&
@@ -263,4 +293,3 @@ export const deleteProject = async (req: AuthRequest, res: Response): Promise<vo
     res.status(statusCode).json(response);
   }
 };
-

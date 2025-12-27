@@ -32,7 +32,7 @@ export class Workspace {
   @JoinColumn({ name: 'ownerId' })
   owner!: User;
 
-  @OneToMany(() => Project, (project) => project.workspace, { cascade: true })
+  @OneToMany(() => Project, project => project.workspace, { cascade: true })
   projects!: Project[];
 
   @CreateDateColumn()
@@ -71,4 +71,3 @@ export interface WorkspaceResponse {
   createdAt: Date;
   updatedAt: Date;
 }
-

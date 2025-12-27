@@ -1,5 +1,11 @@
 import { AppDataSource } from '../../config/database';
-import { Job, JobStatus, JobType, CreateJobDto, JobResponse } from '../../shared/entities/job.entity';
+import {
+  Job,
+  JobStatus,
+  JobType,
+  CreateJobDto,
+  JobResponse,
+} from '../../shared/entities/job.entity';
 import { queueManager } from '../../config/queue';
 import logger from '../../shared/utils/logger';
 
@@ -65,7 +71,10 @@ export class JobService {
     }
   }
 
-  async getJobById(jobId: string, userId?: string): Promise<JobResponse | null> {
+  async getJobById(
+    jobId: string,
+    userId?: string
+  ): Promise<JobResponse | null> {
     try {
       const where: any = { id: jobId };
       if (userId) {
@@ -112,7 +121,9 @@ export class JobService {
         .where('job.userId = :userId', { userId });
 
       if (options?.status) {
-        queryBuilder.andWhere('job.status = :status', { status: options.status });
+        queryBuilder.andWhere('job.status = :status', {
+          status: options.status,
+        });
       }
 
       if (options?.type) {
@@ -133,7 +144,7 @@ export class JobService {
       const jobs = await queryBuilder.getMany();
 
       return {
-        jobs: jobs.map((job) => this.mapToResponse(job)),
+        jobs: jobs.map(job => this.mapToResponse(job)),
         total,
       };
     } catch (error) {
@@ -158,7 +169,10 @@ export class JobService {
         return false;
       }
 
-      if (job.status === JobStatus.COMPLETED || job.status === JobStatus.CANCELLED) {
+      if (
+        job.status === JobStatus.COMPLETED ||
+        job.status === JobStatus.CANCELLED
+      ) {
         logger.warn('Cannot cancel job - already completed or cancelled', {
           jobId,
           status: job.status,
@@ -267,10 +281,16 @@ export class JobService {
       status = JobStatus.PENDING;
     }
 
-    const resultToUpdate = result !== undefined && result !== null ? result : undefined;
-    const errorToUpdate = error !== undefined && error !== null ? error : undefined;
-    
-    if (status !== job.status || (resultToUpdate !== undefined && resultToUpdate !== job.result) || (errorToUpdate !== undefined && errorToUpdate !== job.error)) {
+    const resultToUpdate =
+      result !== undefined && result !== null ? result : undefined;
+    const errorToUpdate =
+      error !== undefined && error !== null ? error : undefined;
+
+    if (
+      status !== job.status ||
+      (resultToUpdate !== undefined && resultToUpdate !== job.result) ||
+      (errorToUpdate !== undefined && errorToUpdate !== job.error)
+    ) {
       await this.updateJobStatus(job.id, status, resultToUpdate, errorToUpdate);
     }
   }
@@ -293,4 +313,3 @@ export class JobService {
     };
   }
 }
-

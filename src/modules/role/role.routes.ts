@@ -122,4 +122,3 @@ router.put('/workspaces/:workspaceId/members/:memberId/role', updateMemberRole);
 router.delete('/workspaces/:workspaceId/members/:memberId', removeMember);
 
 export default router;
-

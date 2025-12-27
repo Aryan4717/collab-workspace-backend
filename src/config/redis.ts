@@ -12,7 +12,7 @@ export const getRedisClient = (): Redis => {
       host: env.redisHost || 'localhost',
       port: env.redisPort || 6379,
       password: env.redisPassword,
-      retryStrategy: (times) => {
+      retryStrategy: times => {
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
@@ -22,7 +22,7 @@ export const getRedisClient = (): Redis => {
       logger.info('Redis client connected');
     });
 
-    redisClient.on('error', (error) => {
+    redisClient.on('error', error => {
       logger.error('Redis client error', { error: error.message });
     });
   }
@@ -35,7 +35,7 @@ export const getRedisSubscriber = (): Redis => {
       host: env.redisHost || 'localhost',
       port: env.redisPort || 6379,
       password: env.redisPassword,
-      retryStrategy: (times) => {
+      retryStrategy: times => {
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
@@ -45,7 +45,7 @@ export const getRedisSubscriber = (): Redis => {
       logger.info('Redis subscriber connected');
     });
 
-    redisSubscriber.on('error', (error) => {
+    redisSubscriber.on('error', error => {
       logger.error('Redis subscriber error', { error: error.message });
     });
   }
@@ -58,7 +58,7 @@ export const getRedisPublisher = (): Redis => {
       host: env.redisHost || 'localhost',
       port: env.redisPort || 6379,
       password: env.redisPassword,
-      retryStrategy: (times) => {
+      retryStrategy: times => {
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
@@ -68,7 +68,7 @@ export const getRedisPublisher = (): Redis => {
       logger.info('Redis publisher connected');
     });
 
-    redisPublisher.on('error', (error) => {
+    redisPublisher.on('error', error => {
       logger.error('Redis publisher error', { error: error.message });
     });
   }
@@ -90,4 +90,3 @@ export const closeRedisConnections = async (): Promise<void> => {
   }
   logger.info('Redis connections closed');
 };
-
