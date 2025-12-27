@@ -15,6 +15,12 @@ import { httpLogger } from './shared/middleware/httpLogger.middleware';
 
 const app: Application = express();
 
+// Trust proxy - required when behind a reverse proxy (Railway, Heroku, etc.)
+// This allows express-rate-limit to correctly identify client IPs
+if (env.nodeEnv === 'production') {
+  app.set('trust proxy', 1); // Trust first proxy (Railway's load balancer)
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
