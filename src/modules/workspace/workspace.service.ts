@@ -9,6 +9,7 @@ import {
 import { User } from '../../shared/entities/user.entity';
 import { RoleService } from '../role/role.service';
 import { CacheService } from '../../shared/utils/cache.util';
+import { isValidUUID } from '../../shared/utils/uuid.util';
 import logger from '../../shared/utils/logger';
 
 export class WorkspaceService {
@@ -243,6 +244,12 @@ export class WorkspaceService {
   }
 
   static async verifyOwnership(workspaceId: string, userId: string): Promise<boolean> {
+    // Validate UUID format before querying database
+    // Use isValidUUID (non-throwing) for boolean check
+    if (!isValidUUID(workspaceId)) {
+      return false;
+    }
+
     const workspace = await this.workspaceRepository.findOne({
       where: { id: workspaceId, ownerId: userId },
     });

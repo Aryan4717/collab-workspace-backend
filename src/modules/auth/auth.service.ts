@@ -35,7 +35,21 @@ export class AuthService {
       name: userData.name,
     });
 
-    const savedUser = await this.userRepository.save(user);
+    let savedUser;
+    try {
+      savedUser = await this.userRepository.save(user);
+    } catch (error) {
+      // Handle database constraint violations (e.g., unique constraint on email)
+      // This can happen if cleanup didn't work or in race conditions
+      if (error instanceof Error && error.message.includes('duplicate key')) {
+        logger.warn('Registration failed: User already exists (database constraint)', {
+          email: userData.email,
+        });
+        throw new Error('User with this email already exists');
+      }
+      // Re-throw other errors
+      throw error;
+    }
     logger.info('User created successfully', { userId: savedUser.id, email: savedUser.email });
 
     // Generate tokens
@@ -95,15 +109,37 @@ export class AuthService {
     });
 
     // Store refresh token
+    // Handle potential duplicate token by cleaning up old tokens for this user first
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
-    const refreshTokenEntity = this.refreshTokenRepository.create({
-      token: tokens.refreshToken,
-      userId: user.id,
-      expiresAt,
-    });
-    await this.refreshTokenRepository.save(refreshTokenEntity);
+    try {
+      const refreshTokenEntity = this.refreshTokenRepository.create({
+        token: tokens.refreshToken,
+        userId: user.id,
+        expiresAt,
+      });
+      await this.refreshTokenRepository.save(refreshTokenEntity);
+    } catch (error) {
+      // If duplicate key error, clean up old tokens and retry
+      if (error instanceof Error && error.message.includes('duplicate key')) {
+        logger.warn('Duplicate refresh token detected during login, cleaning up old tokens', {
+          userId: user.id,
+        });
+        // Delete all existing refresh tokens for this user
+        await this.refreshTokenRepository.delete({ userId: user.id });
+        // Retry saving the new token
+        const refreshTokenEntity = this.refreshTokenRepository.create({
+          token: tokens.refreshToken,
+          userId: user.id,
+          expiresAt,
+        });
+        await this.refreshTokenRepository.save(refreshTokenEntity);
+      } else {
+        // Re-throw if it's a different error
+        throw error;
+      }
+    }
 
     logger.info('User login successful', {
       userId: user.id,

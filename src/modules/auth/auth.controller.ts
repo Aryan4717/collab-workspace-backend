@@ -90,7 +90,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
     const response: ApiResponse = {
       success: true,
-      data: tokens,
+      data: { tokens },
       message: 'Tokens refreshed successfully',
     };
     res.status(200).json(response);
@@ -155,7 +155,7 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
 
     const response: ApiResponse = {
       success: true,
-      data: user,
+      data: { user },
     };
     res.status(200).json(response);
   } catch (error) {
