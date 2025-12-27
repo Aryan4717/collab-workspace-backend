@@ -8,6 +8,7 @@ A scalable, real-time collaborative workspace backend API built with Node.js, Ty
 - [Trade-offs](#trade-offs)
 - [Scalability](#scalability)
 - [How to Run](#how-to-run)
+- [Deployment](#deployment)
 - [API Documentation](#api-documentation)
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
@@ -464,18 +465,114 @@ Expected response:
 }
 ```
 
+## Deployment
+
+### Production Deployment
+
+The application is deployed on **Railway** and is accessible at:
+
+**Base URL**: `https://collab-workspace-backend-production.up.railway.app`
+
+**API Base Path**: `/api/v1`
+
+### Making Requests to Production API
+
+#### Using cURL
+
+**Health Check**:
+```bash
+curl https://collab-workspace-backend-production.up.railway.app/api/v1/health
+```
+
+**Example Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "timestamp": "2025-12-27T17:27:10.070Z"
+  },
+  "message": "Service is healthy"
+}
+```
+
+**Register User**:
+```bash
+curl -X POST https://collab-workspace-backend-production.up.railway.app/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securePassword123",
+    "name": "John Doe"
+  }'
+```
+
+**Login**:
+```bash
+curl -X POST https://collab-workspace-backend-production.up.railway.app/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securePassword123"
+  }'
+```
+
+**Authenticated Request** (Get User Info):
+```bash
+curl -X GET https://collab-workspace-backend-production.up.railway.app/api/v1/auth/me \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+#### Using Postman
+
+1. **Import Collection**: You can import the API collection or manually create requests
+2. **Set Base URL**: Use `https://collab-workspace-backend-production.up.railway.app`
+3. **Set Headers**:
+   - `Content-Type: application/json` for POST/PUT requests
+   - `Authorization: Bearer <token>` for authenticated endpoints
+
+**Example Postman Setup**:
+- **Method**: `GET`
+- **URL**: `https://collab-workspace-backend-production.up.railway.app/api/v1/health`
+- **Headers**: None required for health check
+
+#### Using JavaScript/Fetch
+
+```javascript
+// Health check
+fetch('https://collab-workspace-backend-production.up.railway.app/api/v1/health')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// Authenticated request
+fetch('https://collab-workspace-backend-production.up.railway.app/api/v1/auth/me', {
+  headers: {
+    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+  }
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+### API Documentation
+
+The interactive Swagger documentation is available at:
+- **Production**: `https://collab-workspace-backend-production.up.railway.app/api/v1/docs`
+- **Local**: `http://localhost:3000/api/v1/docs`
+
 ## API Documentation
 
 ### Interactive API Documentation
 
-Once the server is running, access the interactive Swagger API documentation at:
+Access the interactive Swagger API documentation:
 
-**URL**: `http://localhost:3000/api/v1/docs`
+- **Production**: `https://collab-workspace-backend-production.up.railway.app/api/v1/docs`
+- **Local**: `http://localhost:3000/api/v1/docs`
 
 The Swagger UI provides:
 - Complete API endpoint documentation
 - Request/response schemas
-- Try-it-out functionality
+- Try-it-out functionality (works with production API)
 - Authentication support
 
 ### API Base URL
@@ -484,6 +581,9 @@ All API endpoints are prefixed with:
 ```
 /api/v1
 ```
+
+**Production Base URL**: `https://collab-workspace-backend-production.up.railway.app/api/v1`
+**Local Base URL**: `http://localhost:3000/api/v1`
 
 ### Authentication
 
