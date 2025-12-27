@@ -129,11 +129,15 @@ class WorkerService {
   }
 
   private createWorker(jobType: JobType): void {
-    const connection = {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD,
-    };
+    // Use REDIS_URL in production (Railway), individual params in development
+    const connection =
+      process.env.NODE_ENV === 'production' && process.env.REDIS_URL
+        ? (process.env.REDIS_URL as any) // BullMQ accepts connection URL string
+        : {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+            password: process.env.REDIS_PASSWORD,
+          };
 
     const workerOptions: WorkerOptions = {
       connection,
