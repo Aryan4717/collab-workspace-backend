@@ -5,6 +5,7 @@
 paths-ignore:
   - ".env.example"
   - "docker-compose.yml"
+  - "docker-compose.dev.yml"
 
 # Note: If using GitGuardian in GitHub/GitLab, you may also need to:
 # 1. Go to GitGuardian dashboard
