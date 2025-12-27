@@ -4,7 +4,9 @@ import app from './app';
 import { env } from './config/env';
 import { AppDataSource } from './config/database';
 import { socketService } from './modules/realtime/socket.server';
+import { workerService } from './modules/job/worker.service';
 import { closeRedisConnections } from './config/redis';
+import { queueManager } from './config/queue';
 import logger from './shared/utils/logger';
 
 const startServer = async (): Promise<void> => {
@@ -22,6 +24,9 @@ const startServer = async (): Promise<void> => {
 
     // Initialize WebSocket server
     socketService.initialize(httpServer);
+
+    // Initialize worker service for async job processing
+    workerService.initialize();
 
     // Start server
     httpServer.listen(env.port, () => {
@@ -42,6 +47,12 @@ const startServer = async (): Promise<void> => {
         // Close WebSocket server
         socketService.close();
         
+        // Close worker service
+        await workerService.closeAll();
+        
+        // Close queue manager
+        await queueManager.closeAll();
+        
         // Close Redis connections
         await closeRedisConnections();
         
@@ -51,6 +62,8 @@ const startServer = async (): Promise<void> => {
         logger.info('Database connection closed');
         logger.info('Redis connections closed');
         logger.info('WebSocket server closed');
+        logger.info('Worker service closed');
+        logger.info('Queue manager closed');
         logger.info('HTTP server closed');
         process.exit(0);
       });

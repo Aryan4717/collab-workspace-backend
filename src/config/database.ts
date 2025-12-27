@@ -6,6 +6,7 @@ import { Workspace } from '../shared/entities/workspace.entity';
 import { Project } from '../shared/entities/project.entity';
 import { WorkspaceMember } from '../shared/entities/workspace-member.entity';
 import { WorkspaceInvite } from '../shared/entities/workspace-invite.entity';
+import { Job } from '../shared/entities/job.entity';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -14,7 +15,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: env.dbUsername,
   password: env.dbPassword,
   database: env.dbName,
-  entities: [User, RefreshToken, Workspace, Project, WorkspaceMember, WorkspaceInvite],
+  entities: [User, RefreshToken, Workspace, Project, WorkspaceMember, WorkspaceInvite, Job],
   synchronize: env.nodeEnv !== 'production', // Auto-sync in dev, use migrations in production
   logging: false, // Disable SQL query logging
   migrations: ['dist/migrations/*.js'],
