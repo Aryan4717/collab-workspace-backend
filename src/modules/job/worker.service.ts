@@ -128,6 +128,30 @@ class WorkerService {
     });
   }
 
+  private parseRedisUrl(url: string): {
+    host: string;
+    port: number;
+    password?: string;
+    username?: string;
+  } {
+    try {
+      // Parse redis://[username:password@]host:port format
+      const urlObj = new URL(url);
+      return {
+        host: urlObj.hostname,
+        port: parseInt(urlObj.port || '6379', 10),
+        password: urlObj.password || undefined,
+        username: urlObj.username || undefined,
+      };
+    } catch (error) {
+      logger.error('Failed to parse REDIS_URL', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        urlPrefix: url.substring(0, 30),
+      });
+      throw new Error('Invalid REDIS_URL format');
+    }
+  }
+
   private createWorker(jobType: JobType): void {
     // Use REDIS_URL in production (Railway), individual params in development
     const nodeEnv = process.env.NODE_ENV;
@@ -147,21 +171,55 @@ class WorkerService {
 
     const useRedisUrl = nodeEnv === 'production' && hasRedisUrl;
 
-    const connection = useRedisUrl
-      ? (redisUrl as any) // BullMQ accepts connection URL string
-      : {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          password: process.env.REDIS_PASSWORD,
-        };
+    let connection: {
+      host: string;
+      port: number;
+      password?: string;
+      username?: string;
+    };
+
+    if (useRedisUrl && redisUrl) {
+      // Parse REDIS_URL into connection parameters for BullMQ
+      const parsed = this.parseRedisUrl(redisUrl);
+      connection = {
+        host: parsed.host,
+        port: parsed.port,
+        password: parsed.password,
+        username: parsed.username,
+      };
+      logger.info('Parsed REDIS_URL for worker', {
+        jobType,
+        host: connection.host,
+        port: connection.port,
+        hasPassword: !!connection.password,
+        hasUsername: !!connection.username,
+      });
+    } else {
+      connection = {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        password: process.env.REDIS_PASSWORD,
+      };
+    }
 
     // Log which connection method is being used
     logger.info('Worker Redis connection configured', {
       jobType,
       usingRedisUrl: useRedisUrl,
-      connectionType: useRedisUrl ? 'REDIS_URL' : 'host/port',
-      connectionHost: useRedisUrl ? 'from URL' : connection.host,
-      connectionPort: useRedisUrl ? 'from URL' : connection.port,
+      connectionType: useRedisUrl ? 'REDIS_URL (parsed)' : 'host/port',
+      connectionHost: connection.host,
+      connectionPort: connection.port,
+      hasPassword: !!connection.password,
+    });
+
+    // Log the exact connection object being passed to BullMQ
+    logger.info('Passing connection to BullMQ Worker', {
+      jobType,
+      connectionHost: connection.host,
+      connectionPort: connection.port,
+      hasPassword: !!connection.password,
+      hasUsername: !!connection.username,
+      connectionType: typeof connection,
     });
 
     const workerOptions: WorkerOptions = {
@@ -188,14 +246,16 @@ class WorkerService {
         jobType,
         error: error.message,
         stack: error.stack,
-        connectionType: useRedisUrl ? 'REDIS_URL' : 'host/port',
-        connectionConfig: useRedisUrl
-          ? 'REDIS_URL set'
-          : {
-              host: connection.host,
-              port: connection.port,
-              hasPassword: !!connection.password,
-            },
+        connectionType: useRedisUrl ? 'REDIS_URL (parsed)' : 'host/port',
+        connectionConfig: {
+          host: connection.host,
+          port: connection.port,
+          hasPassword: !!connection.password,
+          hasUsername: !!connection.username,
+        },
+        actualRedisUrl: useRedisUrl
+          ? `${redisUrl?.substring(0, 20)}...` // Log first 20 chars
+          : 'not used',
       });
     });
 
