@@ -3,15 +3,62 @@ import { JobType } from '../shared/entities/job.entity';
 import logger from '../shared/utils/logger';
 import { env } from './env';
 
+// Parse Redis URL into connection parameters
+const parseRedisUrl = (
+  url: string
+): {
+  host: string;
+  port: number;
+  password?: string;
+  username?: string;
+} => {
+  try {
+    // Parse redis://[username:password@]host:port format
+    const urlObj = new URL(url);
+    return {
+      host: urlObj.hostname,
+      port: parseInt(urlObj.port || '6379', 10),
+      password: urlObj.password || undefined,
+      username: urlObj.username || undefined,
+    };
+  } catch (error) {
+    logger.error('Failed to parse REDIS_URL for queue', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      urlPrefix: url.substring(0, 30),
+    });
+    throw new Error('Invalid REDIS_URL format');
+  }
+};
+
 // Build Redis connection config for BullMQ
 // BullMQ/ioredis supports both connection URL string and connection object
 // Use REDIS_URL in production (Railway), individual params in development
 const buildQueueConnection = (): ConnectionOptions => {
-  if (env.nodeEnv === 'production' && env.redisUrl) {
-    // BullMQ accepts connection URL string - cast to ConnectionOptions
-    return env.redisUrl as unknown as ConnectionOptions;
+  const hasRedisUrl =
+    env.nodeEnv === 'production' && env.redisUrl && env.redisUrl.trim() !== '';
+
+  if (hasRedisUrl && env.redisUrl) {
+    // Parse REDIS_URL into connection parameters for BullMQ
+    const parsed = parseRedisUrl(env.redisUrl);
+    logger.info('Queue Redis connection - parsed REDIS_URL', {
+      host: parsed.host,
+      port: parsed.port,
+      hasPassword: !!parsed.password,
+      hasUsername: !!parsed.username,
+    });
+    return {
+      host: parsed.host,
+      port: parsed.port,
+      password: parsed.password,
+      username: parsed.username,
+    } as ConnectionOptions;
   }
+
   // Development: use connection object
+  logger.info('Queue Redis connection - using host/port', {
+    host: env.redisHost || 'localhost',
+    port: env.redisPort || 6379,
+  });
   return {
     host: env.redisHost || 'localhost',
     port: env.redisPort || 6379,
@@ -57,6 +104,18 @@ class QueueManager {
           queue: jobType,
           error: error.message,
           stack: error.stack,
+          connectionType:
+            env.nodeEnv === 'production' && env.redisUrl
+              ? 'REDIS_URL (parsed)'
+              : 'host/port',
+          connectionInfo:
+            env.nodeEnv === 'production' && env.redisUrl
+              ? parseRedisUrl(env.redisUrl)
+              : {
+                  host: env.redisHost || 'localhost',
+                  port: env.redisPort || 6379,
+                  hasPassword: !!env.redisPassword,
+                },
         });
       });
 
