@@ -16,7 +16,8 @@ const startWorker = async (): Promise<void> => {
       hasRedisHost: !!process.env.REDIS_HOST,
       redisHost: process.env.REDIS_HOST || 'not set',
       hasDatabaseUrl: !!process.env.DATABASE_URL,
-      databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) || 'not set',
+      databaseUrlPrefix:
+        process.env.DATABASE_URL?.substring(0, 20) || 'not set',
     });
 
     // Initialize database connection (needed for job status updates)

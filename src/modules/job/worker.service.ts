@@ -133,7 +133,7 @@ class WorkerService {
     const nodeEnv = process.env.NODE_ENV;
     const redisUrl = process.env.REDIS_URL;
     const hasRedisUrl = !!redisUrl && redisUrl.trim() !== '';
-    
+
     // Comprehensive logging for debugging
     logger.info('Creating worker - Redis connection check', {
       jobType,
@@ -146,7 +146,7 @@ class WorkerService {
     });
 
     const useRedisUrl = nodeEnv === 'production' && hasRedisUrl;
-    
+
     const connection = useRedisUrl
       ? (redisUrl as any) // BullMQ accepts connection URL string
       : {
@@ -189,11 +189,13 @@ class WorkerService {
         error: error.message,
         stack: error.stack,
         connectionType: useRedisUrl ? 'REDIS_URL' : 'host/port',
-        connectionConfig: useRedisUrl ? 'REDIS_URL set' : {
-          host: connection.host,
-          port: connection.port,
-          hasPassword: !!connection.password,
-        },
+        connectionConfig: useRedisUrl
+          ? 'REDIS_URL set'
+          : {
+              host: connection.host,
+              port: connection.port,
+              hasPassword: !!connection.password,
+            },
       });
     });
 
