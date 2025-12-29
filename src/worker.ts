@@ -7,6 +7,19 @@ import logger from './shared/utils/logger';
 
 const startWorker = async (): Promise<void> => {
   try {
+    // Log environment variables for debugging (safely - don't log secrets)
+    logger.info('Worker startup - Environment check', {
+      nodeEnv: process.env.NODE_ENV,
+      hasRedisUrl: !!process.env.REDIS_URL,
+      redisUrlLength: process.env.REDIS_URL?.length || 0,
+      redisUrlPrefix: process.env.REDIS_URL?.substring(0, 20) || 'not set',
+      hasRedisHost: !!process.env.REDIS_HOST,
+      redisHost: process.env.REDIS_HOST || 'not set',
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      databaseUrlPrefix:
+        process.env.DATABASE_URL?.substring(0, 20) || 'not set',
+    });
+
     // Initialize database connection (needed for job status updates)
     await AppDataSource.initialize();
     logger.info('Database connected successfully', {

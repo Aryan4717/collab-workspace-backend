@@ -130,14 +130,39 @@ class WorkerService {
 
   private createWorker(jobType: JobType): void {
     // Use REDIS_URL in production (Railway), individual params in development
-    const connection =
-      process.env.NODE_ENV === 'production' && process.env.REDIS_URL
-        ? (process.env.REDIS_URL as any) // BullMQ accepts connection URL string
-        : {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379', 10),
-            password: process.env.REDIS_PASSWORD,
-          };
+    const nodeEnv = process.env.NODE_ENV;
+    const redisUrl = process.env.REDIS_URL;
+    const hasRedisUrl = !!redisUrl && redisUrl.trim() !== '';
+
+    // Comprehensive logging for debugging
+    logger.info('Creating worker - Redis connection check', {
+      jobType,
+      nodeEnv,
+      hasRedisUrl,
+      redisUrlLength: redisUrl?.length || 0,
+      redisUrlPrefix: redisUrl?.substring(0, 30) || 'not set',
+      redisHost: process.env.REDIS_HOST || 'not set',
+      redisPort: process.env.REDIS_PORT || 'not set',
+    });
+
+    const useRedisUrl = nodeEnv === 'production' && hasRedisUrl;
+
+    const connection = useRedisUrl
+      ? (redisUrl as any) // BullMQ accepts connection URL string
+      : {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          password: process.env.REDIS_PASSWORD,
+        };
+
+    // Log which connection method is being used
+    logger.info('Worker Redis connection configured', {
+      jobType,
+      usingRedisUrl: useRedisUrl,
+      connectionType: useRedisUrl ? 'REDIS_URL' : 'host/port',
+      connectionHost: useRedisUrl ? 'from URL' : connection.host,
+      connectionPort: useRedisUrl ? 'from URL' : connection.port,
+    });
 
     const workerOptions: WorkerOptions = {
       connection,
@@ -156,6 +181,23 @@ class WorkerService {
       },
       workerOptions
     );
+
+    // Add connection error logging
+    worker.on('error', (error: Error) => {
+      logger.error('BullMQ Worker connection error', {
+        jobType,
+        error: error.message,
+        stack: error.stack,
+        connectionType: useRedisUrl ? 'REDIS_URL' : 'host/port',
+        connectionConfig: useRedisUrl
+          ? 'REDIS_URL set'
+          : {
+              host: connection.host,
+              port: connection.port,
+              hasPassword: !!connection.password,
+            },
+      });
+    });
 
     // Worker event handlers
     worker.on('completed', async (job: BullJob, result: JobResult) => {
