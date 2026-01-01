@@ -1,5 +1,7 @@
 # Collaborative Workspace Backend
 
+![Collaborative Workspace Architecture](./src/image/collab.png)
+
 A scalable, real-time collaborative workspace backend API built with Node.js, TypeScript, Express, PostgreSQL, and Redis. This application provides workspace management, project collaboration, role-based access control, job queue processing, and real-time WebSocket communication.
 
 ## Table of Contents
@@ -708,4 +710,7 @@ collab-workspace-backend/
 ## License
 
 ISC
+
+
+<!-- node test-socketio.js YOUR_ACCESS_TOKEN YOUR_WORKSPACE_ID -->
 
